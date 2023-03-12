@@ -11,35 +11,35 @@ using namespace std;
 /*************Initialisation : création de la scène à partir du fichier texte *************/
  bool init(char* inputName, scene &myScene) 
  {
-   int nbMat, nbSphere, nbLight;
+   int nbMat, nbObjets, nbLight;
    int i;
 
    ifstream sceneFile(inputName);
    if (!sceneFile)
      return  false;
    sceneFile >> myScene.sizex >> myScene.sizey; // 1ère ligne du .txt
-   sceneFile >> nbMat >> nbSphere >> nbLight;   // 2ème ligne du .txt
+   sceneFile >> nbMat >> nbObjets >> nbLight;   // 2ème ligne du .txt
    
    // On dimensionne les vecteurs de notre scène en fonction des valeurs du .txt
    myScene.matTab.resize(nbMat); 
-   myScene.sphTab.resize(nbSphere); 
+   myScene.objTab.resize(nbObjets); 
    myScene.lgtTab.resize(nbLight); 
 
    // Maintenant que c'est dimensionné, on remplit ces vecteurs avec les valeurs 
    for (i=0; i < nbMat; i++)             // Informations sur les matériaux (chaque matTab[i] contient 4 valeurs)
      sceneFile >> myScene.matTab[i];
-   for (i=0; i < nbSphere; i++)          // Informations sur les sphères (chaque sphTab[i] contient 6 valeurs)
-     sceneFile >> myScene.sphTab[i];
+   for (i=0; i < nbObjets; i++)          // Informations sur les sphères (chaque sphTab[i] contient 6 valeurs)
+     sceneFile >> myScene.objTab[i];
    for (i=0; i < nbLight; i++)           // Informations sur les lumières (chaque lgtTab[i] contient 6 valeurs)
      sceneFile >> myScene.lgtTab[i];
    
    return true;
  } 
 
-/******************* DECLARATION DES DIFFERENTES FORMES *****************/
+/******************* Calculs mathématiques pour différentes formes *****************/
 
-// La sphère
-bool hitSphere(const ray &r, const sphere &s, float &t) 
+// Pour la sphère
+bool hitSphere(const ray &r, const object &s, float &t) 
  { 
    // intersection rayon/sphere 
    vecteur dist = s.pos - r.start.pos; 
@@ -100,9 +100,9 @@ bool hitSphere(const ray &r, const sphere &s, float &t)
        float t = 20000.0f;
        int currentSphere= -1;
 
-       for (unsigned int i = 0; i < myScene.sphTab.size(); ++i) 
+       for (unsigned int i = 0; i < myScene.objTab.size(); ++i) 
        { 
-         if (hitSphere(viewRay, myScene.sphTab[i], t)) 
+         if (hitSphere(viewRay, myScene.objTab[i], t)) 
          {
            currentSphere = i;
          }
@@ -113,7 +113,7 @@ bool hitSphere(const ray &r, const sphere &s, float &t)
 
        point newStart = viewRay.start.pos + t * viewRay.dir; 
        // la normale au point d'intersection 
-       vecteur n = newStart - myScene.sphTab[currentSphere].pos;
+       vecteur n = newStart - myScene.objTab[currentSphere].pos;
        float temp = n * n;
        if (temp == 0.0f) 
          break; 
@@ -121,7 +121,7 @@ bool hitSphere(const ray &r, const sphere &s, float &t)
        temp = 1.0f / sqrtf(temp); 
        n = temp * n; 
        
-       material currentMat = myScene.matTab[myScene.sphTab[currentSphere].material]; 
+       material currentMat = myScene.matTab[myScene.objTab[currentSphere].material]; 
 
        // calcul de la valeur d'�clairement au point 
        for (unsigned int j = 0; j < myScene.lgtTab.size(); ++j) {
@@ -137,8 +137,8 @@ bool hitSphere(const ray &r, const sphere &s, float &t)
          lightRay.dir = (1/t) * dist;
          // calcul des ombres 
          bool inShadow = false; 
-         for (unsigned int i = 0; i < myScene.sphTab.size(); ++i) {
-           if (hitSphere(lightRay, myScene.sphTab[i], t)) {
+         for (unsigned int i = 0; i < myScene.objTab.size(); ++i) {
+           if (hitSphere(lightRay, myScene.objTab[i], t)) {
              inShadow = true;
              break;
            }

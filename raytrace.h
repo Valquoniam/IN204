@@ -94,15 +94,18 @@ struct ray {
 	vecteur dir;
 };
 
-/* 1ère forme : la sphère*/
-struct sphere {
+// La structure des objets : 
+//	- Un centre de gravité pos
+//	- Une taille (dont la définition diffère pour chaque objet que l'on va décrire)
+//	- Un matériau
+struct object {
 	point pos;
 	float size;
 	int material;
 };
 
-istream & operator >> ( istream &inputFile, sphere& sph ) {
-	return inputFile >> sph.pos >> sph.size >> sph.material;
+istream & operator >> ( istream &inputFile, object& obj ) {
+	return inputFile >> obj.pos >> obj.size >> obj.material;
 }
 
 // Notre scène est constitué d'un certain nombre de :
@@ -111,7 +114,7 @@ istream & operator >> ( istream &inputFile, sphere& sph ) {
 // 	- Sources lumineuses
 struct scene {
 	vector<material> matTab;
-	vector<sphere>   sphTab;
+	vector<object>   objTab;
 	vector<light>    lgtTab;
 	int sizex, sizey;         // La taille de la scène
 };
