@@ -4,6 +4,7 @@
 #include <cmath>
 #include <limits>
 #include <algorithm>
+#include <stdio.h>
 #include "raytrace.h"
 
 using namespace std;
@@ -28,8 +29,10 @@ using namespace std;
    // Maintenant que c'est dimensionné, on remplit ces vecteurs avec les valeurs 
    for (i=0; i < nbMat; i++)             // Informations sur les matériaux (chaque matTab[i] contient 4 valeurs)
      sceneFile >> myScene.matTab[i];
-   for (i=0; i < nbObjets; i++)          // Informations sur les sphères (chaque sphTab[i] contient 6 valeurs)
+   for (i=0; i < nbObjets; i++){       // Informations sur les objets (chaque objTab[i] contient 7 valeurs, la 7ème étant le nom de l'objet)
      sceneFile >> myScene.objTab[i];
+    }
+
    for (i=0; i < nbLight; i++)           // Informations sur les lumières (chaque lgtTab[i] contient 6 valeurs)
      sceneFile >> myScene.lgtTab[i];
    
@@ -38,130 +41,165 @@ using namespace std;
 
 /******************* Calculs mathématiques pour différentes formes *****************/
 
-// Pour la sphère
+// Pour la sphère. Cette fonction marche 'pseudo-récursivement' dans la fonction draw, car la fonction ne continuera que si hitSphere renvoie True
 bool hitSphere(const ray &r, const object &s, float &t) 
  { 
-   // intersection rayon/sphere 
-   vecteur dist = s.pos - r.start.pos; 
-   float B = r.dir * dist;
-   float D = B*B - dist * dist + s.size * s.size; 
+    
+   // Calcul du discriminant
+   vecteur dist = s.pos - r.start.pos;               // Vecteur source_lumineuse -> centre de la sphère
+   float B = r.dir * dist;                           // Produit scalaire entre la dist et la direction du rayon
+   float D = B*B - dist * dist + s.size * s.size;    // Discriminant de l'équation polynomiale
+   
+   // On test si il y a intersection 
    if (D < 0.0f) 
      return false; 
+   
+   // Si il y a bien intersection, on calcul les 2 racines
    float t0 = B - sqrtf(D); 
    float t1 = B + sqrtf(D);
-   bool retvalue = false;  
+   
+   bool retvalue = false; 
+
+   // Si la première racine est positive ET plus petite que t (cf. la suite), on la met comme nouvelle intersection la plus proche
    if ((t0 > 0.1f) && (t0 < t)) 
    {
      t = t0;
      retvalue = true; 
    } 
+
+   // Pareil pour la 2eme racine
    if ((t1 > 0.1f) && (t1 < t)) 
    {
      t = t1; 
      retvalue = true; 
    }
+
+   //On retourne True uniquement si un pt d'intersection a été trouvé
    return retvalue; 
  }
 
 /*************** CALCUL DU RAY TRACING ET CREATION DE L'IMAGE ***************/
  bool draw(char* outputName, scene &myScene) 
  {
+  
+   // Création du fichier output en binaire
    ofstream imageFile(outputName,ios_base::binary);
+
+   // Vérification au cas où
    if (!imageFile)
      return false; 
-   // Ajout du header TGA
-   imageFile.put(0).put(0);
-   imageFile.put(2);        /* RGB non compresse */
+   
+   // Binaire : On ajoute le header spécifique au format TGA
+   imageFile.put(0).put(0);  // - 2 premiers octets à 0
+   imageFile.put(2);         // - 3ème octet mis à 2 pour dire que l'on est en RGB non compressé
+   imageFile.put(0).put(0);  // - 2 Octets de l'origine en X mis à 0
+   imageFile.put(0).put(0);  // - 2 Octets de l'origine en Y mis à 0
 
-   imageFile.put(0).put(0);
-   imageFile.put(0).put(0);
    imageFile.put(0);
+   imageFile.put(0).put(0); 
+   imageFile.put(0).put(0); 
 
-   imageFile.put(0).put(0); /* origine X */ 
-   imageFile.put(0).put(0); /* origine Y */
+   // Ici, le 0xFF00 sert a prendre uniquement les valeurs octet par octet (c'est un masque)
+   // On divise par 256 pour le 2ème octet car diviser par 2^8 décale justement de 8 bits le résultat en binaire
+   // Bref, ca sert juste a stocker la taille de l'image
+   imageFile.put((myScene.sizex & 0x00FF)).put((myScene.sizex & 0xFF00) / 256); // - 2 octets de la largeur de l'image 
+   imageFile.put((myScene.sizey & 0x00FF)).put((myScene.sizey & 0xFF00) / 256); // - 2 octets de la largeur de l'image
+   
+   imageFile.put(24); // On a 24 bits par pixel dans l'image
+   imageFile.put(0);  // On finit le header avec un 0
+   
 
-   imageFile.put((myScene.sizex & 0x00FF)).put((myScene.sizex & 0xFF00) / 256);
-   imageFile.put((myScene.sizey & 0x00FF)).put((myScene.sizey & 0xFF00) / 256);
-   imageFile.put(24);       /* 24 bit bitmap */ 
-   imageFile.put(0); 
-   // fin du header TGA
-
-   // balayage 
-   for (int y = 0; y < myScene.sizey; ++y) { 
+   // Balayage des rayons lumineux
+   for (int y = 0; y < myScene.sizey; ++y) { //On parcourt tous les pixels de l'image
    for (int x = 0; x < myScene.sizex; ++x) {
-     float red = 0, green = 0, blue = 0;
+     float red = 0, green = 0, blue = 0;    
      float coef = 1.0f;
      int level = 0; 
+     
      // lancer de rayon 
-     ray viewRay = { {float(x), float(y), -10000.0f}, { 0.0f, 0.0f, 1.0f}};
+     ray viewRay = { {float(x), float(y), -10000.0f}, { 0.0f, 0.0f, 1.0f}}; // Le rayon est "perprendiculaire" à l'écran et commence a -10 000
+     
+     // Boucle while qui s'arrête après 10 itérations ou si on a une reflection négative 
      do 
      { 
        // recherche de l'intersection la plus proche
-       float t = 20000.0f;
-       int currentSphere= -1;
+       float t = 30000.0f;     // On prend comme distance "infinie" 30 000
+       int currentObject= -1;
 
-       for (unsigned int i = 0; i < myScene.objTab.size(); ++i) 
+       for (unsigned int i = 0; i < myScene.objTab.size(); ++i) // Pour chacun des objets
        { 
-         if (hitSphere(viewRay, myScene.objTab[i], t)) 
-         {
-           currentSphere = i;
-         }
+        if (myScene.objTab[i].type == "sphere"){
+          if (hitSphere(viewRay, myScene.objTab[i], t)){        // Si l'objet intersecte le rayon
+            currentObject = i;}                                 // On le prend comme l'objet 'actuel'
+        }
        }
 
-       if (currentSphere == -1)
+       if (currentObject == -1)
          break;
 
+       // On calcule le point de rencontre entre le rayon et l'objet
        point newStart = viewRay.start.pos + t * viewRay.dir; 
-       // la normale au point d'intersection 
-       vecteur n = newStart - myScene.objTab[currentSphere].pos;
-       float temp = n * n;
-       if (temp == 0.0f) 
+       
+       // On calcule la normale à ce point par rapport à l'objet actuel
+       vecteur n = newStart - myScene.objTab[currentObject].pos;        // Pour cela, on fait juste pt_rencontre - centre de l'objet
+       
+       // On vérifie juste que cette normale est non nulle
+       if ( n * n == 0.0f) 
          break; 
 
-       temp = 1.0f / sqrtf(temp); 
-       n = temp * n; 
+       // On normalise la normale (aha)
+       n =  1.0f / sqrtf(n*n) * n; 
        
-       material currentMat = myScene.matTab[myScene.objTab[currentSphere].material]; 
-
-       // calcul de la valeur d'�clairement au point 
-       for (unsigned int j = 0; j < myScene.lgtTab.size(); ++j) {
+       // On va calculer l'éclairement en fonction également du matériau
+       material currentMat = myScene.matTab[myScene.objTab[currentObject].material]; 
+       
+       for (unsigned int j = 0; j < myScene.lgtTab.size(); ++j) { // Pour chaque lumière
          light current = myScene.lgtTab[j];
-         vecteur dist = current.pos - newStart;
-         if (n * dist <= 0.0f)
+         
+         vecteur dist = current.pos - newStart;                   // On prend le vecteur entre la source et le point de rencontre 
+         float t = sqrtf(dist * dist);      
+         if ( t <= 0.0f )                        // On vérifie que le vecteur dist est non nul (et aussi inf pour les erreurs d'arrondi)
            continue;
-         float t = sqrtf(dist * dist);
-         if ( t <= 0.0f )
+         if (n * dist <= 0.0f)                                    // On vérifie que l'on prend uniquement les rayons sortants de l'objet
            continue;
+        
+         // On crée le rayon de lumière de reflection, qui part du point de rencontre et va vers la source lumineuse
          ray lightRay;
          lightRay.start.pos = newStart;
          lightRay.dir = (1/t) * dist;
-         // calcul des ombres 
+         
+         // calcul des objets dans l'ombre de cette reflection 
          bool inShadow = false; 
-         for (unsigned int i = 0; i < myScene.objTab.size(); ++i) {
-           if (hitSphere(lightRay, myScene.objTab[i], t)) {
-             inShadow = true;
+         for (unsigned int i = 0; i < myScene.objTab.size(); ++i) {   // Pour tous les objets
+           if ((myScene.objTab[i].type == "sphere") && (hitSphere(lightRay, myScene.objTab[i], t))) {  //Si un objet est touché par le rayon réflechi
+             inShadow = true; // On note inShadow comme étant True (cf. suite)
              break;
            }
          }
+
+         // Si un objet est touché par le rayon réflechi, ca veut dire que la surface actuelle est dans l'ombre ! Donc rien à faire
+         // En revanche, si il n'y a aucun objet entre la surface actuelle et la lumière :
          if (!inShadow) {
-           // lambert
-           float lambert = (lightRay.dir * n) * coef;
-           red += lambert * current.red * currentMat.red;
+           // On applique le modèle de Lambert, ou lambert est la "valeur d'éclairement"
+           float lambert = (lightRay.dir * n) * coef;          // De base, coef vaut 1
+           red += lambert * current.red * currentMat.red;      // On met à jour les valeurs des pixels
            green += lambert * current.green * currentMat.green;
            blue += lambert * current.blue * currentMat.blue;
          }
        }
          
-       // on it�re sur la prochaine reflexion
-       coef *= currentMat.reflection;
-       float reflet = 2.0f * (viewRay.dir * n);
-       viewRay.start.pos = newStart;
-       viewRay.dir = viewRay.dir - reflet * n;
+       // On met à jour les rayons pour calculer la reflection suivante
+       coef *= currentMat.reflection;            // On met à jour le coefficient de reflection
+       float reflet = 2.0f * (viewRay.dir * n);  // reflet vaut 2.cos(viewray,n)
+       
+       viewRay.start.pos = newStart;             // On met à jour la 'position de la caméra' pour calculer les reflections suivantes
+       viewRay.dir = viewRay.dir - reflet * n;   // On met à jour la direction comme étant l'ancienne direction - reflet*la normale
 
-       level++;
+       level++;  // On passe au niveau d'itération suivant
      } 
-     while ((coef > 0.0f) && (level < 10));   
-
+     while ((coef > 0.0f) && (level < 40));   
+    
+     // On met à jour le pixel de l'image
      imageFile.put((unsigned char)min(blue*255.0f,255.0f)).put((unsigned char)min(green*255.0f, 255.0f)).put((unsigned char)min(red*255.0f, 255.0f));
    }
    }
@@ -172,9 +210,9 @@ bool hitSphere(const ray &r, const object &s, float &t)
    if  (argc < 3)
      return -1;
    scene myScene;
-   if (!init(argv[1], myScene))
+   if (!init(argv[1], myScene))    // On initialise (indirectement)
      return -1;
-   if (!draw(argv[2], myScene))
+   if (!draw(argv[2], myScene))    // On dessine (toujours indirectement)
      return -1;
    return 0;
  }

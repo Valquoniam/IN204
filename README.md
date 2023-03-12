@@ -25,12 +25,12 @@ sudo apt install adwaita-icon-theme-full
 #### Exemple de scène1 :
 ​
 * 640 480                          // taille du viewport 
-* 3 3 2                            // nbre de materiel, de spheres et de lumieres 
+* 3 3 2                            // nbre de materiel, d'objets et de lumieres 
 * 1.0 1.0 0.0 0.5                  // premier materiel: rouge vert bleu et coef de reflexion 
 * 0.0 1.0 1.0 0.5                  // deuxieme materiel 
 * 1.0 0.0 1.0 0.5                  // troisieme materiel 
-* 233.0 290.0 0.0 100 0            // sphere 1: posx, posy, posz, rayon, materiel id 
-* 407.0 290.0 0.0 100 1            // sphere 2 
-* 320.0 140.0 0.0 100 2            // sphere 3 
+* 233.0 290.0 0.0 100 0 sphere     // objet 1: posx, posy, posz, rayon, materiel_id nom_objet
+* 407.0 290.0 0.0 100 1 sphere     // objet 2 
+* 320.0 140.0 0.0 100 2 sphere     // objet 3 
 * 0.0 240.0 -100.0 1.0 1.0 1.0     // light 1 : posx, posy, posz, intensité rouge, vert et bleu 
 * 640.0 240.0 -10000.0 0.6 0.7 1.0 // light 2

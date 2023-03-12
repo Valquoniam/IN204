@@ -102,10 +102,11 @@ struct object {
 	point pos;
 	float size;
 	int material;
+	string type;
 };
 
 istream & operator >> ( istream &inputFile, object& obj ) {
-	return inputFile >> obj.pos >> obj.size >> obj.material;
+	return inputFile >> obj.pos >> obj.size >> obj.material >> obj.type;
 }
 
 // Notre scène est constitué d'un certain nombre de :
