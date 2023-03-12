@@ -1,6 +1,6 @@
-#IN204
+# IN204
 
-##IT Project w/ Axel Dumont - RayTracer
+## IT Project w/ Axel Dumont - RayTracer
 
 Pour compiler le projet, il suffit de faire 'make all' et les images résultantes s'affichent en .png.
 
@@ -18,9 +18,9 @@ Pour ne pas avoir de warning en utilisant eog, il faut installer ce package:
 sudo apt install adwaita-icon-theme-full
 ```
 
-### Descrption du système de scène 
+### Description du système de scène 
 
-Exemple de scène1 :
+#### Exemple de scène1 :
 
 * 640 480                          // taille du viewport 
 * 3 3 2                            // nbre de materiel, de spheres et de lumieres 
