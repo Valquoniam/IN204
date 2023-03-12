@@ -4,6 +4,8 @@
 
 Pour compiler le projet, il suffit de faire 'make all' et les images résultantes s'affichent en .png.
 
+La façon dont marche le make all est décrite dans le fichier Makefile
+
 Elles sont également sauvegardées dans le dossier images.
 
 Ces 2 packages sont nécessaires à la compilation :
