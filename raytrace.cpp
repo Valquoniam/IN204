@@ -4,54 +4,39 @@
 #include <cmath>
 #include <limits>
 #include <algorithm>
+#include "raytrace.h"
+#include "formes.h"
+#include "formes.cpp"
+
 using namespace std;
 
-#include "Raytrace.h"
-
+// Initialisation : création de la scène à partir du fichier texte
  bool init(char* inputName, scene &myScene) 
  {
    int nbMat, nbSphere, nbLight;
    int i;
+
    ifstream sceneFile(inputName);
    if (!sceneFile)
      return  false;
-   sceneFile >> myScene.sizex >> myScene.sizey;
-   sceneFile >> nbMat >> nbSphere >> nbLight;
+   sceneFile >> myScene.sizex >> myScene.sizey; // 1ère ligne du .txt
+   sceneFile >> nbMat >> nbSphere >> nbLight;   // 2ème ligne du .txt
+   
+   // On dimensionne les vecteurs de notre scène en fonction des valeurs du .txt
    myScene.matTab.resize(nbMat); 
    myScene.sphTab.resize(nbSphere); 
    myScene.lgtTab.resize(nbLight); 
-   for (i=0; i < nbMat; i++) 
+
+   // Maintenant que c'est dimensionné, on remplit ces vecteurs avec les valeurs 
+   for (i=0; i < nbMat; i++)             // Informations sur les matériaux (chaque matTab[i] contient 4 valeurs)
      sceneFile >> myScene.matTab[i];
-   for (i=0; i < nbSphere; i++) 
+   for (i=0; i < nbSphere; i++)          // Informations sur les sphères (chaque sphTab[i] contient 6 valeurs)
      sceneFile >> myScene.sphTab[i];
-   for (i=0; i < nbLight; i++)
+   for (i=0; i < nbLight; i++)           // Informations sur les lumières (chaque lgtTab[i] contient 6 valeurs)
      sceneFile >> myScene.lgtTab[i];
+   
    return true;
  } 
-
- bool hitSphere(const ray &r, const sphere &s, float &t) 
- { 
-   // intersection rayon/sphere 
-   vecteur dist = s.pos - r.start; 
-   float B = r.dir * dist;
-   float D = B*B - dist * dist + s.size * s.size; 
-   if (D < 0.0f) 
-     return false; 
-   float t0 = B - sqrtf(D); 
-   float t1 = B + sqrtf(D);
-   bool retvalue = false;  
-   if ((t0 > 0.1f) && (t0 < t)) 
-   {
-     t = t0;
-     retvalue = true; 
-   } 
-   if ((t1 > 0.1f) && (t1 < t)) 
-   {
-     t = t1; 
-     retvalue = true; 
-   }
-   return retvalue; 
- }
 
  bool draw(char* outputName, scene &myScene) 
  {
@@ -100,7 +85,7 @@ using namespace std;
        if (currentSphere == -1)
          break;
 
-       point newStart = viewRay.start + t * viewRay.dir; 
+       point newStart = viewRay.start.pos + t * viewRay.dir; 
        // la normale au point d'intersection 
        vecteur n = newStart - myScene.sphTab[currentSphere].pos;
        float temp = n * n;
@@ -122,7 +107,7 @@ using namespace std;
          if ( t <= 0.0f )
            continue;
          ray lightRay;
-         lightRay.start = newStart;
+         lightRay.start.pos = newStart;
          lightRay.dir = (1/t) * dist;
          // calcul des ombres 
          bool inShadow = false; 
@@ -144,7 +129,7 @@ using namespace std;
        // on it�re sur la prochaine reflexion
        coef *= currentMat.reflection;
        float reflet = 2.0f * (viewRay.dir * n);
-       viewRay.start = newStart;
+       viewRay.start.pos = newStart;
        viewRay.dir = viewRay.dir - reflet * n;
 
        level++;
