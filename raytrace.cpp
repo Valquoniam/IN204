@@ -5,12 +5,10 @@
 #include <limits>
 #include <algorithm>
 #include "raytrace.h"
-#include "formes.h"
-#include "formes.cpp"
 
 using namespace std;
 
-// Initialisation : création de la scène à partir du fichier texte
+/*************Initialisation : création de la scène à partir du fichier texte *************/
  bool init(char* inputName, scene &myScene) 
  {
    int nbMat, nbSphere, nbLight;
@@ -38,6 +36,34 @@ using namespace std;
    return true;
  } 
 
+/******************* DECLARATION DES DIFFERENTES FORMES *****************/
+
+// La sphère
+bool hitSphere(const ray &r, const sphere &s, float &t) 
+ { 
+   // intersection rayon/sphere 
+   vecteur dist = s.pos - r.start.pos; 
+   float B = r.dir * dist;
+   float D = B*B - dist * dist + s.size * s.size; 
+   if (D < 0.0f) 
+     return false; 
+   float t0 = B - sqrtf(D); 
+   float t1 = B + sqrtf(D);
+   bool retvalue = false;  
+   if ((t0 > 0.1f) && (t0 < t)) 
+   {
+     t = t0;
+     retvalue = true; 
+   } 
+   if ((t1 > 0.1f) && (t1 < t)) 
+   {
+     t = t1; 
+     retvalue = true; 
+   }
+   return retvalue; 
+ }
+
+/*************** CALCUL DU RAY TRACING ET CREATION DE L'IMAGE ***************/
  bool draw(char* outputName, scene &myScene) 
  {
    ofstream imageFile(outputName,ios_base::binary);

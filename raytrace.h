@@ -2,6 +2,7 @@ using namespace std;
 #include <iostream>
 #include <vector>
 
+
 /*************Définition des différentes structures que l'on va utiliser *****************/
 
 // Un point dans l'espace 3D dans les coordonées cartésiennes
@@ -85,13 +86,24 @@ struct light {
 // Retourne les valeurs d'une source lumineuse
 istream & operator >> ( istream &inputFile, light& lig ) {
 	return inputFile >> lig.pos >> lig.red >> lig.green >> lig.blue;
-};
+}
 
 // Un rayon lumineux a une source et va dans une direction
 struct ray {
 	light start;
 	vecteur dir;
 };
+
+/* 1ère forme : la sphère*/
+struct sphere {
+	point pos;
+	float size;
+	int material;
+};
+
+istream & operator >> ( istream &inputFile, sphere& sph ) {
+	return inputFile >> sph.pos >> sph.size >> sph.material;
+}
 
 // Notre scène est constitué d'un certain nombre de :
 //	- Matériaux

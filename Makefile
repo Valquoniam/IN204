@@ -7,12 +7,6 @@ CC = g++
 CFLAGS  = -g -Wall
 RM = rm
 
-# The scene
-SCENE = scene1.txt 
-
-# The output image
-OUTPUT = image1 image2
-
 # The build target 
 TARGET = raytrace
 
