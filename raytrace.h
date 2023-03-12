@@ -111,7 +111,7 @@ istream & operator >> ( istream &inputFile, object& obj ) {
 
 // Notre scène est constitué d'un certain nombre de :
 //	- Matériaux
-// 	- Sphères
+// 	- Objets (sphères, cubes, etc...)
 // 	- Sources lumineuses
 struct scene {
 	vector<material> matTab;
