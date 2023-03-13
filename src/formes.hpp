@@ -35,6 +35,12 @@ struct scene {
 	int sizex, sizey;         // La taille de la scène
 };
 
+//Spécialement pour le cube
+struct face {
+    point p1, p2, p3, p4;
+};
+
+
 
 /******************* Calculs mathématiques pour différentes formes *****************/
 
@@ -51,7 +57,7 @@ bool hitSphere(const ray &r, const object &s, float &t)
    if (D < 0.0f) 
      return false; 
    
-   // Si il y a bien intersection, on calcul les 2 racines
+   // Si il y a bien intersection, on calcule les 2 racines
    float t0 = B - sqrtf(D); 
    float t1 = B + sqrtf(D);
    
@@ -120,15 +126,104 @@ bool hitCube(const ray &r, const object &c, float &t)
         vertices[i].z = zrot + center.z;
         }
 
+  // Faces du cube 
+  face cube[6] = {
+      {vertices[0], vertices[2], vertices[4],vertices[6]}, // Face avant intialement
+      {vertices[1], vertices[3], vertices[5],vertices[7]}, // Face arrière initialement
+      {vertices[0], vertices[1], vertices[2],vertices[3]}, // Face gauche
+      {vertices[4], vertices[5], vertices[6],vertices[7]}, // Face droite
+      {vertices[2], vertices[3], vertices[6],vertices[7]}, // Face dessus
+      {vertices[0], vertices[1], vertices[4],vertices[5]}, // Face dessous
+    };
+
+  //Vecteurs normaux du cube
+  vecteur normales[6];
+  for (int i=0; i<6;i++){
+    vecteur k = (cube[i].p1 - cube[i].p3) & (cube[i].p2 - cube[i].p4);
+    float norm = 1/sqrtf((normales[i].x)*(normales[i].x) + (normales[i].y)*(normales[i].y) + (normales[i].z)*(normales[i].z));
+    normales[i] = norm * k;
+  }
+
     // Tests des intersections entre le rayon et le cube (pas encore fait et jy arrive )
-
     
-    return false;
- }
+    // Calculate the minimum and maximum x, y, and z values of the cube
+    float min_x = vertices[0].x, max_x = vertices[0].x;
+    float min_y = vertices[0].y, max_y = vertices[0].y;
+    float min_z = vertices[0].z, max_z = vertices[0].z;
+    
+    for (int i = 1; i < 8; ++i) {
+        min_x = min(min_x, vertices[i].x);
+        max_x = max(max_x, vertices[i].x);
+        min_y = min(min_y, vertices[i].y);
+        max_y = max(max_y, vertices[i].y);
+        min_z = min(min_z, vertices[i].z);
+        max_z = max(max_z, vertices[i].z);
+    }
 
-struct face {
-    point p1, p2, p3, p4;
-};
+    // Calculate the intersection of the ray with each of the six faces of the cube
+    float k;
+    vecteur intersection;
+    bool intersects = false;
+    if (r.dir.x != 0.0f) {
+        
+        k = (min_x - r.start.pos.x) / r.start.pos.x;
+        intersection.x = min_x;
+        intersection.y = r.start.pos.y + k * r.dir.y;
+        intersection.z = r.start.pos.z + k * r.dir.z;
+        if (intersection.y >= min_y && intersection.y <= max_y &&
+            intersection.z >= min_z && intersection.z <= max_z && k>0.0f) {
+            intersects = true;
+        }
+        
+        k = (max_x - r.start.pos.x) / r.start.pos.x;
+        intersection.x = max_x;
+        intersection.y = r.start.pos.y + k * r.dir.y;
+        intersection.z = r.start.pos.z + k * r.dir.z;
+        if (intersection.y >= min_y && intersection.y <= max_y &&
+            intersection.z >= min_z && intersection.z <= max_z && k>0.0f) {
+            intersects = true;
+        }
+    }
+    if (r.dir.y != 0.0f) {
+        k = (min_y - r.start.pos.y) / r.dir.y;
+        intersection.x = r.start.pos.x + k * r.dir.x;
+        intersection.y = min_y;
+        intersection.z = r.start.pos.z + k * r.dir.z;
+        if (intersection.x >= min_x && intersection.x <= max_x &&
+            intersection.z >= min_z && intersection.z <= max_z && k>0.0f) {
+            intersects = true;
+        }
+        k = (max_y - r.start.pos.y) / r.dir.y;
+        intersection.x = r.start.pos.x + t * r.dir.x;
+        intersection.y = max_y;
+        intersection.z = r.start.pos.z + t * r.dir.z;
+        if (intersection.x >= min_x && intersection.x <= max_x &&
+            intersection.z >= min_z && intersection.z <= max_z && k>0.0f) {
+            intersects = true;
+        }
+    }
+    if (r.dir.z != 0.0f) {
+        k = (min_z - r.start.pos.z) / r.dir.z;
+        intersection.x = r.start.pos.x + k * r.dir.x;
+        intersection.y = r.start.pos.y + k * r.dir.y;
+        intersection.z = min_z;
+        if (intersection.x >= min_x && intersection.x <= max_x &&
+           intersection.y >= min_y && intersection.y <= max_y && k > 0.0f) {
+           intersects = true;
+        }
+        k = (max_z - r.start.pos.z) / r.dir.z;
+        intersection.x = r.start.pos.x + k * r.dir.x;
+        intersection.y = r.start.pos.y + k * r.dir.y;
+        intersection.z = max_z;
+        if (intersection.x >= min_x && intersection.x <= max_x &&
+          intersection.y >= min_y && intersection.y <= max_y && k>0.0f) {
+          intersects = true;
+        }
+     }
+
+return intersects;
+
+}
 
 double distancePointToFace(point p, face f) {
     double a = f.p1.y * (f.p2.z - f.p3.z) + f.p2.y * (f.p3.z - f.p1.z) + f.p3.y * (f.p1.z - f.p2.z);
