@@ -87,7 +87,7 @@ using namespace std;
      // lancer de rayon 
      ray viewRay = { {float(x), float(y), -10000.0f}, { 0.0f, 0.0f, 1.0f}}; // Le rayon est "perprendiculaire" à l'écran et commence a -10 000
      
-     // Boucle while qui s'arrête après 10 itérations ou si on a une reflection négative 
+     // Boucle while qui s'arrête après x itérations ou si on a une reflection négative 
      do 
      { 
        // recherche de l'intersection la plus proche
@@ -116,22 +116,23 @@ using namespace std;
 
        // On calcule le point de rencontre entre le rayon et l'objet
        point newStart = viewRay.start.pos + t * viewRay.dir; 
-       vecteur n = newStart - myScene.objTab[currentObject].pos;       
+       // cout << "(" << newStart.x << ", " << newStart.y << ", " << newStart.z << " )" << endl;
+       vecteur n;       
        
        // On calcule la normale à ce point par rapport à l'objet actuel
        if (currentObjectType == "sphere"){                                 // 1er cas, la sphère
           n = newStart - myScene.objTab[currentObject].pos;}       // Pour cela, on fait juste pt_rencontre - centre de l'objet 
        
        if (currentObjectType == "cube"){                                   // 2ème cas, le cube
-          n = newStart - myScene.objTab[currentObject].pos;}     // Ici, la ,normale dépend de la face du cube et de la rotation
-
+          n = {0.0,0.0,-1.0};}   // Ici, la ,normale dépend de la face du cube et de la rotation
+          
        // On vérifie juste que cette normale est non nulle
        if ( n * n == 0.0f) 
          break; 
 
        // On normalise la normale (aha)
        n =  1.0f / sqrtf(n*n) * n; 
-       
+
        // On va calculer l'éclairement en fonction également du matériau
        material currentMat = myScene.matTab[myScene.objTab[currentObject].material]; 
        
@@ -139,12 +140,11 @@ using namespace std;
          light current = myScene.lgtTab[j];
          
          vecteur dist = current.pos - newStart;                   // On prend le vecteur entre la source et le point de rencontre 
-         float t = sqrtf(dist * dist);      
+         float t = sqrtf(dist * dist); 
          if ( t <= 0.0f )                        // On vérifie que le vecteur dist est non nul (et aussi inf pour les erreurs d'arrondi)
            continue;
-         if (n * dist <= 0.0f)                                    // On vérifie que l'on prend uniquement les rayons sortants de l'objet
+         if (n * dist <= 0.0f)                            // On vérifie que l'on prend uniquement les rayons sortants de l'objet
            continue;
-        
          // On crée le rayon de lumière de reflection, qui part du point de rencontre et va vers la source lumineuse
          ray lightRay;
          lightRay.start.pos = newStart;
@@ -153,17 +153,24 @@ using namespace std;
          // calcul des objets dans l'ombre de cette reflection 
          bool inShadow = false; 
          for (unsigned int i = 0; i < myScene.objTab.size(); ++i) {   // Pour tous les objets
+           
            if ((myScene.objTab[i].type == "sphere") && (hitSphere(lightRay, myScene.objTab[i], t))) {  //Si un objet est touché par le rayon réflechi
              inShadow = true; // On note inShadow comme étant True (cf. suite)
              break;
            }
+           
+           if ((myScene.objTab[i].type == "cube") && (hitCube(lightRay, myScene.objTab[i], t))) {  //Si un objet est touché par le rayon réflechi
+             inShadow = true; // On note inShadow comme étant True (cf. suite)
+             break;
+           }
          }
-
+          
          // Si un objet est touché par le rayon réflechi, ca veut dire que la surface actuelle est dans l'ombre ! Donc rien à faire
          // En revanche, si il n'y a aucun objet entre la surface actuelle et la lumière :
          if (!inShadow) {
            // On applique le modèle de Lambert, ou lambert est la "valeur d'éclairement"
            float lambert = (lightRay.dir * n) * coef;          // De base, coef vaut 1
+           cout << lambert;
            red += lambert * current.red * currentMat.red;      // On met à jour les valeurs des pixels
            green += lambert * current.green * currentMat.green;
            blue += lambert * current.blue * currentMat.blue;
@@ -179,7 +186,7 @@ using namespace std;
 
        level++;  // On passe au niveau d'itération suivant
      } 
-     while ((coef > 0.0f) && (level < 10));   
+     while ((coef > 0.0f) && (level < 5));   
     
      // On met à jour le pixel de l'image
      imageFile.put((unsigned char)min(blue*255.0f,255.0f)).put((unsigned char)min(green*255.0f, 255.0f)).put((unsigned char)min(red*255.0f, 255.0f));

@@ -67,6 +67,10 @@ float operator * (const vecteur&v1, const vecteur &v2 ) {
 	return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 }
 
+// Produit vectoriel
+vecteur operator & (const vecteur&v1, const vecteur &v2) {
+	return { v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x};
+}
 // Définition d'un matériau par sa couleur (en pourcentage RGB et son indice de réflection)
 struct material {
 	float red, green, blue, reflection;

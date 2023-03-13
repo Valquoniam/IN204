@@ -21,15 +21,32 @@ $(TARGET): src/formes.hpp src/raytrace.hpp
 	
 	./$(TARGET) scenes/scene1.txt image1.tga
 	./$(TARGET) scenes/scene2.txt image2.tga
+	./$(TARGET) scenes/scene3.txt image3.tga
+	
 	convert image1.tga image1.png
 	convert image2.tga image2.png
+	convert image3.tga image3.png
+	
 	$(RM) image1.tga
 	$(RM) image2.tga
+	$(RM) image3.tga
+	
 	mv image1.png images/image1.png
 	mv image2.png images/image2.png
+	mv image3.png images/image3.png
+	
 	eog images/image1.png
 	eog images/image2.png
+	eog images/image3.png
  
 clean:
 	$(RM) $(TARGET)
 	$(RM) images/*.png
+
+image3:	
+	$(CC) $(CFLAGS) -o $(TARGET) src/$(TARGET).cpp
+	./$(TARGET) scenes/scene3.txt image3.tga
+	convert image3.tga image3.png
+	$(RM) image3.tga
+	mv image3.png images/image3.png
+	eog images/image3.png
