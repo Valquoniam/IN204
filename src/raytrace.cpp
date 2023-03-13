@@ -1,3 +1,9 @@
+// Ceci est le code principale du raytracer.
+// Il contient :
+//  - la fonction d'initialisation "init"
+//  - la fonction d'itération et de calcul du raytracing "draw"
+//  - la fonction main d'éxécution du code
+
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -5,7 +11,7 @@
 #include <limits>
 #include <algorithm>
 #include <stdio.h>
-#include "raytrace.h"
+#include "formes.hpp"
 
 using namespace std;
 
@@ -29,7 +35,7 @@ using namespace std;
    // Maintenant que c'est dimensionné, on remplit ces vecteurs avec les valeurs 
    for (i=0; i < nbMat; i++)             // Informations sur les matériaux (chaque matTab[i] contient 4 valeurs)
      sceneFile >> myScene.matTab[i];
-   for (i=0; i < nbObjets; i++){       // Informations sur les objets (chaque objTab[i] contient 7 valeurs, la 7ème étant le nom de l'objet)
+   for (i=0; i < nbObjets; i++){       // Informations sur les objets (chaque objTab[i] contient 8 valeurs)
      sceneFile >> myScene.objTab[i];
     }
 
@@ -39,44 +45,6 @@ using namespace std;
    return true;
  } 
 
-/******************* Calculs mathématiques pour différentes formes *****************/
-
-// Pour la sphère. Cette fonction marche 'pseudo-récursivement' dans la fonction draw, car la fonction ne continuera que si hitSphere renvoie True
-bool hitSphere(const ray &r, const object &s, float &t) 
- { 
-    
-   // Calcul du discriminant
-   vecteur dist = s.pos - r.start.pos;               // Vecteur source_lumineuse -> centre de la sphère
-   float B = r.dir * dist;                           // Produit scalaire entre la dist et la direction du rayon
-   float D = B*B - dist * dist + s.size * s.size;    // Discriminant de l'équation polynomiale
-   
-   // On test si il y a intersection 
-   if (D < 0.0f) 
-     return false; 
-   
-   // Si il y a bien intersection, on calcul les 2 racines
-   float t0 = B - sqrtf(D); 
-   float t1 = B + sqrtf(D);
-   
-   bool retvalue = false; 
-
-   // Si la première racine est positive ET plus petite que t (cf. la suite), on la met comme nouvelle intersection la plus proche
-   if ((t0 > 0.1f) && (t0 < t)) 
-   {
-     t = t0;
-     retvalue = true; 
-   } 
-
-   // Pareil pour la 2eme racine
-   if ((t1 > 0.1f) && (t1 < t)) 
-   {
-     t = t1; 
-     retvalue = true; 
-   }
-
-   //On retourne True uniquement si un pt d'intersection a été trouvé
-   return retvalue; 
- }
 
 /*************** CALCUL DU RAY TRACING ET CREATION DE L'IMAGE ***************/
  bool draw(char* outputName, scene &myScene) 
@@ -125,12 +93,21 @@ bool hitSphere(const ray &r, const object &s, float &t)
        // recherche de l'intersection la plus proche
        float t = 30000.0f;     // On prend comme distance "infinie" 30 000
        int currentObject= -1;
+       string currentObjectType = "None";
 
        for (unsigned int i = 0; i < myScene.objTab.size(); ++i) // Pour chacun des objets
        { 
         if (myScene.objTab[i].type == "sphere"){
           if (hitSphere(viewRay, myScene.objTab[i], t)){        // Si l'objet intersecte le rayon
-            currentObject = i;}                                 // On le prend comme l'objet 'actuel'
+            currentObject = i;
+            currentObjectType = "sphere";
+            }                                 // On le prend comme l'objet 'actuel'
+        }
+        if (myScene.objTab[i].type == "cube"){
+          if (hitCube(viewRay, myScene.objTab[i], t)){        // Si l'objet intersecte le rayon
+            currentObject = i;
+            currentObjectType = "cube";
+            }                                 // On le prend comme l'objet 'actuel'
         }
        }
 
@@ -139,10 +116,15 @@ bool hitSphere(const ray &r, const object &s, float &t)
 
        // On calcule le point de rencontre entre le rayon et l'objet
        point newStart = viewRay.start.pos + t * viewRay.dir; 
+       vecteur n = newStart - myScene.objTab[currentObject].pos;       
        
        // On calcule la normale à ce point par rapport à l'objet actuel
-       vecteur n = newStart - myScene.objTab[currentObject].pos;        // Pour cela, on fait juste pt_rencontre - centre de l'objet
+       if (currentObjectType == "sphere"){                                 // 1er cas, la sphère
+          n = newStart - myScene.objTab[currentObject].pos;}       // Pour cela, on fait juste pt_rencontre - centre de l'objet 
        
+       if (currentObjectType == "cube"){                                   // 2ème cas, le cube
+          n = newStart - myScene.objTab[currentObject].pos;}     // Ici, la ,normale dépend de la face du cube et de la rotation
+
        // On vérifie juste que cette normale est non nulle
        if ( n * n == 0.0f) 
          break; 
@@ -197,7 +179,7 @@ bool hitSphere(const ray &r, const object &s, float &t)
 
        level++;  // On passe au niveau d'itération suivant
      } 
-     while ((coef > 0.0f) && (level < 40));   
+     while ((coef > 0.0f) && (level < 10));   
     
      // On met à jour le pixel de l'image
      imageFile.put((unsigned char)min(blue*255.0f,255.0f)).put((unsigned char)min(green*255.0f, 255.0f)).put((unsigned char)min(red*255.0f, 255.0f));
@@ -206,6 +188,7 @@ bool hitSphere(const ray &r, const object &s, float &t)
    return true;
  }
 
+/************ Fonction main ***********/
  int main(int argc, char* argv[]) {
    if  (argc < 3)
      return -1;

@@ -11,13 +11,13 @@ RM = rm
 TARGET = raytrace
 
 all: $(TARGET)
- 
+
 # Démarche :
 #	- On compile raytrace.cpp
 #	- On éxécute raytrace.exe avec comme arguments la scène (en 1ère) et l'image output (en 2ème)
 #	- On convertit l'image .tga en .png (Il faut avoir installé la biblio graphicsmagick)
-$(TARGET): 
-	$(CC) $(CFLAGS) -o $(TARGET) $(TARGET).cpp     
+$(TARGET): src/formes.hpp src/raytrace.hpp
+	$(CC) $(CFLAGS) -o $(TARGET) src/$(TARGET).cpp     
 	
 	./$(TARGET) scenes/scene1.txt image1.tga
 	./$(TARGET) scenes/scene2.txt image2.tga

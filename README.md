@@ -29,8 +29,8 @@ sudo apt install adwaita-icon-theme-full
 * 1.0 1.0 0.0 0.5                  // premier materiel: rouge vert bleu et coef de reflexion 
 * 0.0 1.0 1.0 0.5                  // deuxieme materiel 
 * 1.0 0.0 1.0 0.5                  // troisieme materiel 
-* 233.0 290.0 0.0 100 0 sphere     // objet 1: posx, posy, posz, rayon, materiel_id nom_objet
-* 407.0 290.0 0.0 100 1 sphere     // objet 2 
-* 320.0 140.0 0.0 100 2 sphere     // objet 3 
+* 233.0 290.0 0.0 100 0 sphere 0    // objet 1: posx, posy, posz, rayon, materiel_id nom_objet angle_rotation_axe_y
+* 407.0 290.0 0.0 100 1 sphere 0    // objet 2 
+* 320.0 140.0 0.0 100 2 sphere 0    // objet 3 
 * 0.0 240.0 -100.0 1.0 1.0 1.0     // light 1 : posx, posy, posz, intensité rouge, vert et bleu 
 * 640.0 240.0 -10000.0 0.6 0.7 1.0 // light 2

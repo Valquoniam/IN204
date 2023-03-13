@@ -94,28 +94,4 @@ struct ray {
 	vecteur dir;
 };
 
-// La structure des objets : 
-//	- Un centre de gravité pos
-//	- Une taille (dont la définition diffère pour chaque objet que l'on va décrire)
-//	- Un matériau
-struct object {
-	point pos;
-	float size;
-	int material;
-	string type;
-};
 
-istream & operator >> ( istream &inputFile, object& obj ) {
-	return inputFile >> obj.pos >> obj.size >> obj.material >> obj.type;
-}
-
-// Notre scène est constitué d'un certain nombre de :
-//	- Matériaux
-// 	- Objets (sphères, cubes, etc...)
-// 	- Sources lumineuses
-struct scene {
-	vector<material> matTab;
-	vector<object>   objTab;
-	vector<light>    lgtTab;
-	int sizex, sizey;         // La taille de la scène
-};
