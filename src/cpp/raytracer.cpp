@@ -1,8 +1,5 @@
 // Ceci est le code principale du raytracer.
-// Il contient :
-//  - la fonction d'initialisation "init"
-//  - la fonction d'itération et de calcul du raytracing "draw"
-//  - la fonction main d'éxécution du code
+// Il contient : la fonction d'itération et de calcul du raytracing "draw"
 
 #include <iostream>
 #include <fstream>
@@ -11,40 +8,8 @@
 #include <limits>
 #include <algorithm>
 #include <stdio.h>
-#include "formes.hpp"
-
+#include "../hpp/tga_image.hpp"
 using namespace std;
-
-/*************Initialisation : création de la scène à partir du fichier texte *************/
- bool init(char* inputName, scene &myScene) 
- {
-   int nbMat, nbObjets, nbLight;
-   int i;
-
-   ifstream sceneFile(inputName);
-   if (!sceneFile)
-     return  false;
-   sceneFile >> myScene.sizex >> myScene.sizey; // 1ère ligne du .txt
-   sceneFile >> nbMat >> nbObjets >> nbLight;   // 2ème ligne du .txt
-   
-   // On dimensionne les vecteurs de notre scène en fonction des valeurs du .txt
-   myScene.matTab.resize(nbMat); 
-   myScene.objTab.resize(nbObjets); 
-   myScene.lgtTab.resize(nbLight); 
-
-   // Maintenant que c'est dimensionné, on remplit ces vecteurs avec les valeurs 
-   for (i=0; i < nbMat; i++)             // Informations sur les matériaux (chaque matTab[i] contient 4 valeurs)
-     sceneFile >> myScene.matTab[i];
-   for (i=0; i < nbObjets; i++){       // Informations sur les objets (chaque objTab[i] contient 8 valeurs)
-     sceneFile >> myScene.objTab[i];
-    }
-
-   for (i=0; i < nbLight; i++)           // Informations sur les lumières (chaque lgtTab[i] contient 6 valeurs)
-     sceneFile >> myScene.lgtTab[i];
-   
-   return true;
- } 
-
 
 /*************** CALCUL DU RAY TRACING ET CREATION DE L'IMAGE ***************/
  bool draw(char* outputName, scene &myScene) 
@@ -53,29 +18,11 @@ using namespace std;
    // Création du fichier output en binaire
    ofstream imageFile(outputName,ios_base::binary);
 
-   // Vérification au cas où
-   if (!imageFile)
-     return false; 
-   
-   // Binaire : On ajoute le header spécifique au format TGA
-   imageFile.put(0).put(0);  // - 2 premiers octets à 0
-   imageFile.put(2);         // - 3ème octet mis à 2 pour dire que l'on est en RGB non compressé
-   imageFile.put(0).put(0);  // - 2 Octets de l'origine en X mis à 0
-   imageFile.put(0).put(0);  // - 2 Octets de l'origine en Y mis à 0
-
-   imageFile.put(0);
-   imageFile.put(0).put(0); 
-   imageFile.put(0).put(0); 
-
-   // Ici, le 0xFF00 sert a prendre uniquement les valeurs octet par octet (c'est un masque)
-   // On divise par 256 pour le 2ème octet car diviser par 2^8 décale justement de 8 bits le résultat en binaire
-   // Bref, ca sert juste a stocker la taille de l'image
-   imageFile.put((myScene.sizex & 0x00FF)).put((myScene.sizex & 0xFF00) / 256); // - 2 octets de la largeur de l'image 
-   imageFile.put((myScene.sizey & 0x00FF)).put((myScene.sizey & 0xFF00) / 256); // - 2 octets de la largeur de l'image
-   
-   imageFile.put(24); // On a 24 bits par pixel dans l'image
-   imageFile.put(0);  // On finit le header avec un 0
-   
+   // Header TGA
+   if (!header_tga(outputName, myScene, imageFile)){
+      cout << "Problème d'image" << endl;
+      return false;
+   }
 
    // Balayage des rayons lumineux
    for (int y = 0; y < myScene.sizey; ++y) { //On parcourt tous les pixels de l'image
@@ -87,7 +34,7 @@ using namespace std;
      // lancer de rayon 
      ray viewRay = { {float(x), float(y), -10000.0f}, { 0.0f, 0.0f, 1.0f}}; // Le 1er rayon est "perprendiculaire" à l'écran et commence a -10 000
      // ce premier rayon est "virtuel" et sert surtout a quel objet appartient le pixel qu'on parcourt, et la normale de l'objet en ce point
-     
+     int arete = 0; 
      // Boucle while qui s'arrête après x itérations ou si on a une reflection négative 
      do 
      { 
@@ -95,6 +42,8 @@ using namespace std;
        float t = 30000.0f;     // On prend comme distance "infinie" 30 000
        int currentObject= -1;
        string currentObjectType = "None";
+       vecteur n;
+       
 
        for (unsigned int i = 0; i < myScene.objTab.size(); ++i) // Pour chacun des objets
        { 
@@ -105,7 +54,7 @@ using namespace std;
             }                                 // On le prend comme l'objet 'actuel'
         }
         if (myScene.objTab[i].type == "cube"){
-          if (hitCube(viewRay, myScene.objTab[i], t)){        // Si l'objet intersecte le rayon
+          if (hitCube(viewRay, myScene.objTab[i], t, n)){        // Si l'objet intersecte le rayon
             currentObject = i;
             currentObjectType = "cube";
             }                                 // On le prend comme l'objet 'actuel'
@@ -114,38 +63,96 @@ using namespace std;
 
        if (currentObject == -1)
          break;
+      /**************************************************************/
 
+       if (currentObjectType == "cube"){
+        point center = myScene.objTab[currentObject].pos;        // Le centre du cube
+        int size = myScene.objTab[currentObject].size;           // La taille d'un côté du cube
+        float angle = myScene.objTab[currentObject].angle_rotation; // L'angle de rotation du cube
+        angle = angle *  0.0174533;
+
+        point vertices[8] = {
+      {center.x - size / 2, center.y - size / 2, center.z - size / 2}, // Sommet en bas à gauche devant
+      {center.x - size / 2, center.y - size / 2, center.z + size / 2}, // Sommet en bas à gauche derriere
+      {center.x - size / 2, center.y + size / 2, center.z - size / 2}, // Sommet en haut à gauche devant
+      {center.x - size / 2, center.y + size / 2, center.z + size / 2}, // Sommet en haut à gauche derrière
+      {center.x + size / 2, center.y - size / 2, center.z - size / 2}, // Sommet en bas à droite devant
+      {center.x + size / 2, center.y - size / 2, center.z + size / 2}, // Sommet en bas à droite derrière
+      {center.x + size / 2, center.y + size / 2, center.z - size / 2}, // Sommet en haut à droite devant
+      {center.x + size / 2, center.y + size / 2, center.z + size / 2}  // Sommet en haut à droite derrière
+            };
+        
+        // effectuer la rotation du cube
+        float si = sin(angle);
+        float co = cos(angle);
+
+        for (int i = 0; i < 8; i++) {
+            float x = vertices[i].x - center.x;
+            float y = vertices[i].y - center.y;
+            float z = vertices[i].z - center.z;
+
+        // rotation 
+        
+        float zrot = y * co + z * si;
+        float yrot = y * co - z * si; 
+
+        //On met à jour les coordonnées après la rotation
+        vertices[i].x = x + center.x;
+        vertices[i].y = yrot + center.y;
+        vertices[i].z = zrot + center.z;
+        }
+
+        // Calculate the minimum and maximum x, y, and z values of the cube
+        float min_x = vertices[0].x, max_x = vertices[0].x;
+        float min_y = vertices[0].y, max_y = vertices[0].y;
+        float min_z = vertices[0].z, max_z = vertices[0].z;
+    
+        for (int i = 1; i < 8; ++i) {
+          min_x = min(min_x, vertices[i].x);
+          max_x = max(max_x, vertices[i].x);
+          min_y = min(min_y, vertices[i].y);
+          max_y = max(max_y, vertices[i].y);
+          min_z = min(min_z, vertices[i].z);
+          max_z = max(max_z, vertices[i].z);
+          }
+        int y_arete;
+        for (int i = 1; i < 8; ++i) {
+          if (vertices[i].z == min_z){
+            y_arete = vertices[i].y;
+          }
+        }
+        point newStart = viewRay.start.pos + t * viewRay.dir;
+        if (fabs(newStart.z -min_z) < 0.08 && y == y_arete && level == 0 ){
+          arete = 1;
+        }
+       }
        // On calcule le point de rencontre entre le rayon et l'objet
        point newStart = viewRay.start.pos + t * viewRay.dir; 
-       // cout << "(" << newStart.x << ", " << newStart.y << ", " << newStart.z << " )" << endl;
-       vecteur n;       
        
+       // cout << "(" << newStart.x << ", " << newStart.y << ", " << newStart.z << " )" << endl;
        // On calcule la normale à ce point par rapport à l'objet actuel
        if (currentObjectType == "sphere"){                                 // 1er cas, la sphère
           n = newStart - myScene.objTab[currentObject].pos;}       // Pour cela, on fait juste pt_rencontre - centre de l'objet 
        
-       if (currentObjectType == "cube"){                                   // 2ème cas, le cube
-          n = {0.0,0.0,-1.0};}   // Ici, la ,normale dépend de la face du cube et de la rotation
-          
        // On vérifie juste que cette normale est non nulle
        if ( n * n == 0.0f) 
          break; 
 
        // On normalise la normale (aha)
        n =  1.0f / sqrtf(n*n) * n; 
-
+      vecteur n_temp = n;
        // On va calculer l'éclairement en fonction également du matériau
        material currentMat = myScene.matTab[myScene.objTab[currentObject].material]; 
        
        for (unsigned int j = 0; j < myScene.lgtTab.size(); ++j) { // Pour chaque lumière
          light current = myScene.lgtTab[j];
-         
          vecteur dist = current.pos - newStart;                   // On prend le vecteur entre la source et le point de rencontre 
          float t = sqrtf(dist * dist); 
          if ( t <= 0.0f )                        // On vérifie que le vecteur dist est non nul (et aussi inf pour les erreurs d'arrondi)
            continue;
-         if (n * dist <= 0.0f)                            // On vérifie que l'on prend uniquement les rayons sortants de l'objet
-           continue;
+         if (n * dist <= 0.0f){                  // On vérifie que l'on prend uniquement les rayons sortants de l'objet
+           continue;}
+
          // On crée le rayon de lumière de reflection, qui part du point de rencontre et va vers la source lumineuse
          ray lightRay;
          lightRay.start.pos = newStart;
@@ -160,18 +167,18 @@ using namespace std;
              break;
            }
            
-           if ((myScene.objTab[i].type == "cube") && (hitCube(lightRay, myScene.objTab[i], t))) {  //Si un objet est touché par le rayon réflechi
+           if ((myScene.objTab[i].type == "cube") && (hitCube(lightRay, myScene.objTab[i], t, n))) {  //Si un objet est touché par le rayon réflechi
              inShadow = true; // On note inShadow comme étant True (cf. suite)
+             //cout << "shadow";
              break;
            }
          }
-          
+
          // Si un objet est touché par le rayon réflechi, ca veut dire que la surface actuelle est dans l'ombre ! Donc rien à faire
          // En revanche, si il n'y a aucun objet entre la surface actuelle et la lumière :
          if (!inShadow) {
            // On applique le modèle de Lambert, ou lambert est la "valeur d'éclairement"
-           float lambert = (lightRay.dir * n) * coef;          // De base, coef vaut 1
-           cout << lambert;
+           float lambert = (lightRay.dir * n_temp) * coef;          // De base, coef vaut 1
            red += lambert * current.red * currentMat.red;      // On met à jour les valeurs des pixels
            green += lambert * current.green * currentMat.green;
            blue += lambert * current.blue * currentMat.blue;
@@ -187,23 +194,18 @@ using namespace std;
 
        level++;  // On passe au niveau d'itération suivant
      } 
-     while ((coef > 0.0f) && (level < 5));   
-    
+     while ((coef > 0.0f) && (level < 50));   
+
      // On met à jour le pixel de l'image
-     imageFile.put((unsigned char)min(blue*255.0f,255.0f)).put((unsigned char)min(green*255.0f, 255.0f)).put((unsigned char)min(red*255.0f, 255.0f));
+     // Si le pixel appartient à une arête du cube
+     if (arete == 1){
+      imageFile.put((unsigned char)255).put((unsigned char)255).put((unsigned char)255);}
+     
+     else{
+      imageFile.put((unsigned char)min(blue*255.0f,255.0f)).put((unsigned char)min(green*255.0f, 255.0f)).put((unsigned char)min(red*255.0f, 255.0f));}
    }
    }
    return true;
  }
 
-/************ Fonction main ***********/
- int main(int argc, char* argv[]) {
-   if  (argc < 3)
-     return -1;
-   scene myScene;
-   if (!init(argv[1], myScene))    // On initialise (indirectement)
-     return -1;
-   if (!draw(argv[2], myScene))    // On dessine (toujours indirectement)
-     return -1;
-   return 0;
- }
+
