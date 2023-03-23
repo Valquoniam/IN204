@@ -43,22 +43,28 @@ using namespace std;
        int currentObject= -1;
        string currentObjectType = "None";
        vecteur n;
-       
-
-       for (unsigned int i = 0; i < myScene.objTab.size(); ++i) // Pour chacun des objets
+       float tsphere = t;
+       for (unsigned int i = 0; i < myScene.objTab.size(); ++i)  // Pour chacun des objets
        { 
         if (myScene.objTab[i].type == "sphere"){
-          if (hitSphere(viewRay, myScene.objTab[i], t)){        // Si l'objet intersecte le rayon
+          if (hitSphere(viewRay, myScene.objTab[i], tsphere)){         // Si l'objet intersecte le rayon
             currentObject = i;
-            currentObjectType = "sphere";
-            }                                 // On le prend comme l'objet 'actuel'
+            currentObjectType = "sphere";                        // On le prend comme l'objet 'actuel'
+            }                            
         }
         if (myScene.objTab[i].type == "cube"){
           if (hitCube(viewRay, myScene.objTab[i], t, n)){        // Si l'objet intersecte le rayon
             currentObject = i;
-            currentObjectType = "cube";
-            }                                 // On le prend comme l'objet 'actuel'
-        }
+            currentObjectType = "cube";                          // On le prend comme l'objet 'actuel'
+            }                                 
+        } 
+       }
+
+       if (tsphere <= t){
+        currentObjectType = "sphere";
+        t = tsphere;
+       } else {
+        currentObjectType = "cube";
        }
 
        if (currentObject == -1)

@@ -77,5 +77,13 @@ Les scènes sont définies en **.txt** selon le format suivant :
     - Les premiers octets de du fichier sont écrits de facon bien spécifique pour que le fichier soit considéré comme un .tga.
     - Ensuite, chaque groupe de 3 octets décrit les valeurs RBG d'un pixel.
     - Les pixels sont coloriés **ligne par ligne, de gauche à droite, en partant de la ligne du bas**.
+    - Dans notre algorithme, on parcourt donc pour chaque y, tous les x, en partant de (x,y) = (0,0) (_lignes 28-29 de raytracer.cpp_)
 
-3. 
+3. Pour "parcourir" les pixels, on envoie un rayon horizontal d'origine (x,y). 
+    - Si ce rayon touche un objet, alors on note le pixel (x,y) comme faisant partie de l'objet de plus proche que le rayon a traversé.
+    - Pour tester l'intersection rayon-objet, on utilise les fonctions `hitSphere()` et `hitCube()`.
+    - Selon le type d'objet trouvé, on calcule le vecteur normal à la surface dont le pixel actue fait partie.
+    - On fait alors partir un rayon depuis cette surface jusqu'à chaque source lumineuse une par une.
+
+4. Pour "colorier" les pixels, on utilise la technique de ...
+    - A completer mais flemme pour l'instant

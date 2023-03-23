@@ -5,7 +5,7 @@
 #include <limits>
 #include <algorithm>
 #include <stdio.h>
-#include "structs.hpp""
+#include "structs.hpp"
 
 using namespace std;
 
@@ -80,16 +80,18 @@ bool hitSphere(const ray &r, const object &s, float &t)
 
 /***********************************  OBJET 2 : CUBE ***************************************/
 
+//Une face du cube correspond à 4 sommets du cube
 struct face {
     point p1, p2, p3, p4;
 };
 
+
 bool hitCube(const ray &r, const object &c, float &t, vecteur &n) 
  {  
-    point center = c.pos;        // Le centre du cube
-    int size = c.size;           // La taille d'un côté du cube
+    point center = c.pos;           // Le centre du cube
+    int size = c.size;              // La taille d'un côté du cube
     float angle = c.angle_rotation; // L'angle de rotation du cube
-    angle = angle *  -0.0174533;
+    angle = angle *  -0.0174533;    // Conversion de l'angle en radians
 
     // les sommets du cube
     //  - Face gauche (1) : 4 premiers sommets

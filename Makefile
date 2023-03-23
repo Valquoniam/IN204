@@ -16,8 +16,8 @@ all: $(TARGET)
 #	- On compile raytrace.cpp
 #	- On éxécute raytrace.exe avec comme arguments la scène (en 1ère) et l'image output (en 2ème)
 #	- On convertit l'image .tga en .png (Il faut avoir installé la biblio graphicsmagick)
-$(TARGET): src/objects.hpp src/raytrace.hpp src/tga_image.hpp
-	$(CC) $(CFLAGS) -o $(TARGET) src/$(TARGET).cpp     
+$(TARGET): src/hpp/objects.hpp src/hpp/structs.hpp src/hpp/tga_image.hpp
+	$(CC) $(CFLAGS) -o $(TARGET) src/cpp/$(TARGET).cpp     
 	
 	./$(TARGET) scenes/scene1.txt image1.tga
 	./$(TARGET) scenes/scene2.txt image2.tga
