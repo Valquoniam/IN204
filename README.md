@@ -1,36 +1,81 @@
-# IN204
+# IN204 - IT Project w/ Axel Dumont - RayTracer
 
-## IT Project w/ Axel Dumont - RayTracer
+## Résumé
 
-Pour compiler le projet, il suffit de faire 'make all' et les images résultantes s'affichent en .png.
+Ce projet effectue un RayTracing sur un environnement composé de **sphères** et de **cubes**.
 
-La façon dont marche le make all est décrite dans le fichier Makefile
+ - L'ensemble du code se trouve dans le dossier _src_.
 
-Elles sont également sauvegardées dans le dossier images.
-​
+ - Les scènes (objets, matériaux des objets, lumières) sont au format.txt et sont dans le dossier _scenes_.
+ 
+ - Les images résultantes s'affichent en .png dans le dossier _images_.
+
+
+## Compilation
+
+### Packages nécessaires
+
 Ces 2 packages sont nécessaires à la compilation :
 ​
 ```bash
 sudo apt install graphicsmagick-imagemagick-compat
 sudo apt install eog
 ```
-Pour ne pas avoir de warning en utilisant eog, il faut installer ce package:
+Pour ne pas avoir de warning en utilisant le package eog, il faut installer ce package:
 
 ```bash
 sudo apt install adwaita-icon-theme-full
 ```
 
-### Description du système de scène 
+### Ligne de commande
+
+Pour compiler le projet, il faut taper la commande `make all`. 
+
+Pour nettoyer les fichiers images et l'éxécutable, il faut utiliser `make clean`.
+
+Il est également possible de générer seulement une certaine image. Pour l'image 1 par exemple, il y a la commande `make image1`.
+
+## Description du système de scène 
+​ 
+Les scènes sont définies en **.txt** selon le format suivant :
+
+*  _taille de l'image : Longeur Hauteur_ 
+* _nombre de matériaux, nombre d'objets, nombre de lumières_
+* _premier matériau: pourcentage rouge vert bleu et coefficient de reflexion_
+* _deuxieme materiel s'il existe_
+* _troisieme materiel s'il existe et etc..._ 
+* _objet 1: posx, posy, posz, rayon (ou taille des côtés pour un cube), id du matériel (selon leur ordre dans le .txt) type de l'objet (cube ou sphère) angle_rotation_axe_y_
+*  _objet 2_ s'il existe
+* _objet 3_ s'il existe et etc...
+* _lumière 1 : posx, posy, posz, intensité rouge, vert et bleu_
+* _lumière 2 si elle existe_
+
+### Exemple de la première scène :
 ​
-#### Exemple de scène1 :
-​
-* 640 480                          // taille du viewport 
-* 3 3 2                            // nbre de materiel, d'objets et de lumieres 
-* 1.0 1.0 0.0 0.5                  // premier materiel: rouge vert bleu et coef de reflexion 
-* 0.0 1.0 1.0 0.5                  // deuxieme materiel 
-* 1.0 0.0 1.0 0.5                  // troisieme materiel 
-* 233.0 290.0 0.0 100 0 sphere 0    // objet 1: posx, posy, posz, rayon, materiel_id nom_objet angle_rotation_axe_y
-* 407.0 290.0 0.0 100 1 sphere 0    // objet 2 
-* 320.0 140.0 0.0 100 2 sphere 0    // objet 3 
-* 0.0 240.0 -100.0 1.0 1.0 1.0     // light 1 : posx, posy, posz, intensité rouge, vert et bleu 
-* 640.0 240.0 -10000.0 0.6 0.7 1.0 // light 2
+**scene1.txt :**
+```txt
+640 480                            
+3 3 2                             
+1.0 1.0 0.0 0.5                    
+0.0 1.0 1.0 0.5                   
+1.0 0.0 1.0 0.5                   
+233.0 290.0 0.0 100 0 sphere 0    
+407.0 290.0 0.0 100 1 sphere 0   
+320.0 140.0 0.0 100 2 sphere 0     
+0.0 240.0 -100.0 1.0 1.0 1.0 
+640.0 240.0 -10000.0 0.6 0.7 1.0
+```
+
+## Fonctionnement de l'algorithme
+
+1. Nous commencons par lire le fichier texte et placer les informations de la scène dans 3 listes (fonction `init()` de _main.cpp_ ) :
+    - Les informations de chaque matériau sont dans la matrice matTab : **matTab[i]** contient les infos sur le matériau d'indice _i_.
+    - Les informations de chaque objet sont dans la matrice objTab : **objTab[i]** contient les infos sur l'objet d'indice _i_.
+    - Les informations de chaque lumière sont dans la matrice lgtTab : **lgtTab[i]** contient les infos sur la lumière d'indice _i_.
+
+2. On construit une image au format **TGA** (fonction `header_tga()` de _tga_image.hpp_ ) :
+    - Les premiers octets de du fichier sont écrits de facon bien spécifique pour que le fichier soit considéré comme un .tga.
+    - Ensuite, chaque groupe de 3 octets décrit les valeurs RBG d'un pixel.
+    - Les pixels sont coloriés **ligne par ligne, de gauche à droite, en partant de la ligne du bas**.
+
+3. 
