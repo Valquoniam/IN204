@@ -59,7 +59,7 @@ using namespace std;
             }                                 
         } 
        }
-
+        
        if (tsphere <= t){
         currentObjectType = "sphere";
         t = tsphere;
@@ -69,12 +69,13 @@ using namespace std;
 
        if (currentObject == -1)
          break;
-      /**************************************************************/
+      /*************************************************************
 
        if (currentObjectType == "cube"){
         point center = myScene.objTab[currentObject].pos;        // Le centre du cube
         int size = myScene.objTab[currentObject].size;           // La taille d'un côté du cube
-        float angle = myScene.objTab[currentObject].angle_rotation; // L'angle de rotation du cube
+        float angle_y = myScene.objTab[currentObject].angle_rot_y; // L'angle de rotation du cube
+        float angle_x = myScene.objTab[currentObject].angle_rot_x;
         angle = angle *  0.0174533;
 
         point vertices[8] = {
@@ -132,6 +133,7 @@ using namespace std;
           arete = 1;
         }
        }
+        */
        // On calcule le point de rencontre entre le rayon et l'objet
        point newStart = viewRay.start.pos + t * viewRay.dir; 
        
@@ -146,6 +148,7 @@ using namespace std;
 
        // On normalise la normale (aha)
        n =  1.0f / sqrtf(n*n) * n; 
+       
       vecteur n_temp = n;
        // On va calculer l'éclairement en fonction également du matériau
        material currentMat = myScene.matTab[myScene.objTab[currentObject].material]; 

@@ -44,7 +44,7 @@ Les scènes sont définies en **.txt** selon le format suivant :
 * _premier matériau: pourcentage rouge vert bleu et coefficient de reflexion_
 * _deuxieme materiel s'il existe_
 * _troisieme materiel s'il existe et etc..._ 
-* _objet 1: posx, posy, posz, rayon (ou taille des côtés pour un cube), id du matériel (selon leur ordre dans le .txt) type de l'objet (cube ou sphère) angle_rotation_axe_y_
+* _objet 1: posx, posy, posz, rayon (ou taille des côtés pour un cube), id du matériel (selon leur ordre dans le .txt), type de l'objet (cube ou sphère) angle_rot_x, angle_rot_y (à mettre en degrés)
 *  _objet 2_ s'il existe
 * _objet 3_ s'il existe et etc...
 * _lumière 1 : posx, posy, posz, intensité rouge, vert et bleu_

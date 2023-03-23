@@ -14,16 +14,18 @@ using namespace std;
 //	- Un centre de gravité pos
 //	- Une taille (dont la définition diffère pour chaque objet que l'on va décrire)
 //	- Un matériau
+
 struct object {
 	point pos;
 	float size;
 	int material;
 	string type;
-	float angle_rotation;
+	float angle_rot_x;
+  float angle_rot_y;
 };
 
 istream & operator >> ( istream &inputFile, object& obj ) {
-	return inputFile >> obj.pos >> obj.size >> obj.material >> obj.type >> obj.angle_rotation;
+	return inputFile >> obj.pos >> obj.size >> obj.material >> obj.type >> obj.angle_rot_x >> obj.angle_rot_y;
 }
 
 // Notre scène est constitué d'un certain nombre de :
@@ -85,13 +87,55 @@ struct face {
     point p1, p2, p3, p4;
 };
 
+// Rotation du cube selon l'axe X et l'axe Y
+void rotateCube(point center, point vertices[8], float angle_y, float angle_x)
+{
+  // Matrice de rotation en X
+  float matrix_x[3][3] = {
+    {1, 0, 0},
+    {0, cos(angle_x), -sin(angle_x)},
+    {0, sin(angle_x), cos(angle_x)}
+  };
+
+  // Matrice de rotation en Y
+  float matrix_y[3][3] = {
+    {cos(angle_y), 0, sin(angle_y)},
+    {0, 1, 0},
+    {-sin(angle_y), 0, cos(angle_y)}
+  };
+
+  // Appliquer la rotation à chaque sommet du cube
+  for (int i = 0; i < 8; i++) {
+    // Soustraire le centre du cube pour centrer la rotation sur l'origine
+    float x = vertices[i].x - center.x;
+    float y = vertices[i].y - center.y;
+    float z = vertices[i].z - center.z;
+
+    // Appliquer la rotation en X
+    float x1 = matrix_x[0][0] * x + matrix_x[0][1] * y + matrix_x[0][2] * z;
+    float y1 = matrix_x[1][0] * x + matrix_x[1][1] * y + matrix_x[1][2] * z;
+    float z1 = matrix_x[2][0] * x + matrix_x[2][1] * y + matrix_x[2][2] * z;
+
+    // Appliquer la rotation en Y
+    float x2 = matrix_y[0][0] * x1 + matrix_y[0][1] * y1 + matrix_y[0][2] * z1;
+    float y2 = matrix_y[1][0] * x1 + matrix_y[1][1] * y1 + matrix_y[1][2] * z1;
+    float z2 = matrix_y[2][0] * x1 + matrix_y[2][1] * y1 + matrix_y[2][2] * z1;
+
+    // Ajouter le centre du cube pour recentrer le sommet
+    vertices[i].x = x2 + center.x;
+    vertices[i].y = y2 + center.y;
+    vertices[i].z = z2 + center.z;
+  }
+}
 
 bool hitCube(const ray &r, const object &c, float &t, vecteur &n) 
  {  
     point center = c.pos;           // Le centre du cube
     int size = c.size;              // La taille d'un côté du cube
-    float angle = c.angle_rotation; // L'angle de rotation du cube
-    angle = angle *  -0.0174533;    // Conversion de l'angle en radians
+    float angle_x = c.angle_rot_x; // L'angle de rotation du cube
+    float angle_y = c.angle_rot_y;
+    angle_x = angle_x *  0.0174533;    // Conversion de l'angle en radians
+    angle_y = angle_y *  0.0174533;
 
     // les sommets du cube
     //  - Face gauche (1) : 4 premiers sommets
@@ -100,6 +144,7 @@ bool hitCube(const ray &r, const object &c, float &t, vecteur &n)
     //  - Face arrière(4) : Sommets d'indice impairs
     //  - Face dessus (5) : Sommets 2,3,6,7
     //  - Face dessous(6) : Sommets 0,1,4,5
+
     point vertices[8] = {
       {center.x - size / 2, center.y - size / 2, center.z - size / 2}, // Sommet en bas à gauche devant
       {center.x - size / 2, center.y - size / 2, center.z + size / 2}, // Sommet en bas à gauche derriere
@@ -111,25 +156,8 @@ bool hitCube(const ray &r, const object &c, float &t, vecteur &n)
       {center.x + size / 2, center.y + size / 2, center.z + size / 2}  // Sommet en haut à droite derrière
     }; 
 
-    // effectuer la rotation du cube
-    float si = sin(angle);
-    float co = cos(angle);
-
-    for (int i = 0; i < 8; i++) {
-        float x = vertices[i].x - center.x;
-        float y = vertices[i].y - center.y;
-        float z = vertices[i].z - center.z;
-
-        // rotation 
-        
-        float zrot = y * si + z * co;
-        float yrot = y * co - z * si; 
-
-        //On met à jour les coordonnées après la rotation
-        vertices[i].x = x + center.x;
-        vertices[i].y = yrot + center.y;
-        vertices[i].z = zrot + center.z;
-        }
+  // Rotation du cube 
+  rotateCube(center, vertices, angle_y, angle_x);
 
   // Faces du cube 
   face cube[6] = {
@@ -141,7 +169,7 @@ bool hitCube(const ray &r, const object &c, float &t, vecteur &n)
       {vertices[0], vertices[0], vertices[1],vertices[5]}, // Face dessous
     };
 
-  //Vecteurs normaux du cube
+  // calcule les vecteurs normaux des 6 faces du cube
   vecteur normales[6];
   for (int i=0; i<6;i++){
     vecteur diago1 = cube[i].p1 - cube[i].p4;
@@ -151,7 +179,13 @@ bool hitCube(const ray &r, const object &c, float &t, vecteur &n)
     vecteur k = diago1 & diago2;
     float norm = 1/sqrtf((k.x)*(k.x) + (k.y)*(k.y) + (k.z)*(k.z));
     normales[i] = norm * k;
-    //cout << normales[i].x << ", " << normales[i].y << ", " << normales[i].z << endl;
+    if(fabs(normales[i].x)<0.0001)
+      normales[i].x =0;
+    if(fabs(normales[i].y)<0.0001)
+      normales[i].y =0;
+    if(fabs(normales[i].z)<0.0001)
+      normales[i].z =0;
+    // cout << normales[i].x << ", " << normales[i].y << ", " << normales[i].z << endl;
     // cout << endl;
   }
 
@@ -171,13 +205,23 @@ bool hitCube(const ray &r, const object &c, float &t, vecteur &n)
         max_z = max(max_z, vertices[i].z);
     }
 
-    // Calculate the intersection of the ray with each of the six faces of the cube
+    // Calculer l'intersection d'un rayon avec le cube.
+    // on veut trouver le point d'intersection, et savoir à quelle face il appartient.
     
     float k; 
     float liste_k[6] = {300000, 300000, 300000, 300000, 300000, 300000}; // Valeurs quasi à l'infini
     vecteur intersection;
     bool intersects = false;   // True si le rayon intersecte le cube
 
+    // A MODIF
+    // Transformer le rayon dans l'espace de coordonnées local du cube
+    for (int i = 0; i < 3; i++) {
+        float temp = 0;
+        for (int j = 0; j < 3; j++) {
+            temp += rotation_matrix[i][j] * r.direction[j];
+        }
+        r.direction[i] = temp;
+      
     if (r.dir.x != 0.0f) { 
         //Face gauche
         k = (min_x - r.start.pos.x) / r.start.pos.x; 
@@ -253,7 +297,6 @@ bool hitCube(const ray &r, const object &c, float &t, vecteur &n)
       auto itr = find(begin(liste_k), end(liste_k), t);
       int num_face = distance(begin(liste_k), itr);
       n = normales[num_face];}
-      
       //cout << "face de colision " << num_face << endl;}
 
 return intersects;

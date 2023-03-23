@@ -49,7 +49,7 @@ clean:
 	$(RM) images/*.png
 
 image3:	
-	$(CC) $(CFLAGS) -o $(TARGET) src/$(TARGET).cpp
+	$(CC) $(CFLAGS) -o $(TARGET) src/cpp/$(TARGET).cpp
 	./$(TARGET) scenes/scene3.txt image3.tga
 	convert image3.tga image3.png
 	$(RM) image3.tga
