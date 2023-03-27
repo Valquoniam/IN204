@@ -16,6 +16,7 @@ all: $(TARGET)
 #	- On compile raytrace.cpp
 #	- On éxécute raytrace.exe avec comme arguments la scène (en 1ère) et l'image output (en 2ème)
 #	- On convertit l'image .tga en .png (Il faut avoir installé la biblio graphicsmagick)
+
 $(TARGET): src/hpp/objects.hpp src/hpp/structs.hpp src/hpp/tga_image.hpp
 	$(CC) $(CFLAGS) -o $(TARGET) src/cpp/$(TARGET).cpp     
 	
@@ -48,6 +49,26 @@ clean:
 	$(RM) $(TARGET)
 	$(RM) images/*.png
 
+
+
+
+
+image1:	
+	$(CC) $(CFLAGS) -o $(TARGET) src/cpp/$(TARGET).cpp
+	./$(TARGET) scenes/scene1.txt image1.tga
+	convert image1.tga image1.png
+	$(RM) image1.tga
+	mv image1.png images/image1.png
+	eog images/image1.png
+
+image2:	
+	$(CC) $(CFLAGS) -o $(TARGET) src/cpp/$(TARGET).cpp
+	./$(TARGET) scenes/scene2.txt image2.tga
+	convert image2.tga image2.png
+	$(RM) image2.tga
+	mv image2.png images/image2.png
+	eog images/image2.png
+
 image3:	
 	$(CC) $(CFLAGS) -o $(TARGET) src/cpp/$(TARGET).cpp
 	./$(TARGET) scenes/scene3.txt image3.tga
@@ -55,3 +76,11 @@ image3:
 	$(RM) image3.tga
 	mv image3.png images/image3.png
 	eog images/image3.png
+
+image4:	
+	$(CC) $(CFLAGS) -o $(TARGET) src/cpp/$(TARGET).cpp
+	./$(TARGET) scenes/scene4.txt image4.tga
+	convert image4.tga image4.png
+	$(RM) image4.tga
+	mv image4.png images/image4.png
+	eog images/image4.png
