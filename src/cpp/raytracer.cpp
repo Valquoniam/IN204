@@ -14,13 +14,13 @@ using namespace std;
 /*************** CALCUL DU RAY TRACING ET CREATION DE L'IMAGE ***************/
  bool draw(char* outputName, scene &myScene) 
  {
-  
+   
    // Création du fichier output en binaire
    ofstream imageFile(outputName,ios_base::binary);
 
    // Header TGA
    if (!header_tga(outputName, myScene, imageFile)){
-      cout << "Problème d'image" << endl;
+      std::cout << "Problème d'image" << endl;
       return false;
    }
 

@@ -62,6 +62,10 @@ vecteur operator - (const vecteur&v1, const vecteur &v2){
 	return v;
 }
 
+// Division de 2 vects
+point operator / (const vecteur&v1, const vecteur &v2) {
+	return { (v1.x / v2.x),(v1.y / v2.y), (v1.z / v2.z)};
+}
 // Produit scalaire
 float operator * (const vecteur&v1, const vecteur &v2 ) {
 	return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
