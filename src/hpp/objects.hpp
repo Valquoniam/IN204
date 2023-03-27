@@ -323,6 +323,7 @@ bool hitCube(const ray &r1, const object &c, float &t, vecteur &n)
   // Calcul des 2 distances maximales entre l'origine du rayon et les pts du cube
   point tMin = (AABB_min - r.start.pos) / r.dir;
   point tMax= (AABB_max - r.start.pos) / r.dir;
+  
   if(c.angle_rot_x == 0 || c.angle_rot_y == 0)
     if (fabs(r.start.pos.y - AABB_min.y) <0.001 || fabs(r.start.pos.x - AABB_min.x) <0.001 || fabs(r.start.pos.x - AABB_max.x) <0.001 || fabs(r.start.pos.y - AABB_max.y) <0.001 || fabs(r.start.pos.z - AABB_max.z) <0.001 || fabs(r.start.pos.z - AABB_max.z) <0.001)
       return false;
@@ -337,8 +338,7 @@ bool hitCube(const ray &r1, const object &c, float &t, vecteur &n)
   if (tMin.z > tMax.z) {
     swap(tMin.z, tMax.z);
     }
-  //cout << "tMin : " << tMin.x << ", " << tMin.y << ", " << tMin.z << endl;
-  //cout << "tMax : " << tMax.x << ", " << tMax.y << ", " << tMax.z << endl;
+  
   // Pas d'intersection : le rayon est extérieur à la boite sur les axes x ou y
   if (tMin.x > tMax.y || tMin.y > tMax.x) {
         return false;
@@ -363,45 +363,50 @@ bool hitCube(const ray &r1, const object &c, float &t, vecteur &n)
         tMax.x = tMax.z;
     }
 
-    if (tMin.x < 0.0f || tMin.x > t) {
+    if (tMin.x < 0.1f || tMin.x > t) {
         return false;
     }
+    //cout << "tMin : " << tMin.x << ", " << tMin.y << ", " << tMin.z << endl;
+    //cout << "tMax : " << tMax.x << ", " << tMax.y << ", " << tMax.z << endl;
     
     t = tMin.x;
-
+    //cout << t << endl;
+    r.dir = (1.0f/sqrtf(r.dir*r.dir))*r.dir;
     // Le point d'intersection dans les coordonées du cube
     point intersectionPoint = r.start.pos + t * r.dir;
     //cout << "intersect pt cube : " << intersectionPoint.x << ", " << intersectionPoint.y << ", " << intersectionPoint.z << endl;
     // Calcul de la normale au point d'intersection
     vecteur normal;
-    if (intersectionPoint.x >= AABB_min.x && fabs(intersectionPoint.x - AABB_min.x) < 1.0f) {
+    if ( fabs(intersectionPoint.x - AABB_min.x) < 1.0f) {
         normal = {-1, 0, 0};
     }
-    else if (intersectionPoint.x <= AABB_max.x && std::abs(intersectionPoint.x -AABB_max.x) < 1.0f) {
+    else if (fabs(intersectionPoint.x -AABB_max.x) < 1.0f) {
         normal = {1, 0, 0};
     }
-    else if (intersectionPoint.y >= AABB_min.y && std::abs(intersectionPoint.y - AABB_min.y) < 1.0f) {
+    else if (fabs(intersectionPoint.y - AABB_min.y) < 1.0f) {
         normal = {0, -1, 0};
     }
-    else if (intersectionPoint.y <= AABB_max.y && std::abs(intersectionPoint.y - AABB_max.y) < 1.0f) {
+    else if ( fabs(intersectionPoint.y - AABB_max.y) < 1.0f) {
         normal = {0, 1, 0};
     }
-    else if (intersectionPoint.z >= AABB_min.z && std::abs(intersectionPoint.z - AABB_min.z) < 1.0f) {
+    else if (fabs(intersectionPoint.z - AABB_min.z) < 1.0f) {
         normal = {0, 0, -1};
     }
-    else if (intersectionPoint.z <= AABB_max.z && std::abs(intersectionPoint.z - AABB_max.z) < 1.0f) {
+    else if ( fabs(intersectionPoint.z - AABB_max.z) < 1.0f) {
         normal = {0, 0, 1};
     }
     else{
-      normal = {0,0,1};
+      return false;
+
     }
-    cout << "normal : " << normal.x << ", " << normal.y << ", " << normal.z << endl;
+    //cout << "normal : " << normal.x << ", " << normal.y << ", " << normal.z << endl;
     /************PARTIE 3 : ON REMET TOUT DANS LE REPERE LOCAL ***************/
 
     // on remet le point d'intersection dans les coordonées de la fenêtre
     point intersectionPointReel = transformPoint(intersectionPoint,c);
 
-    t = sqrt((intersectionPointReel - r1.start.pos)*(intersectionPointReel - r1.start.pos));
+    t = ((intersectionPointReel - r1.start.pos)/ r1.dir).z;
+    //cout << "t = " << t << endl;
     //cout << "pt d'intersect : " << intersectionPointReel.x << ", " << intersectionPointReel.y << ", " << intersectionPointReel.z << endl;
     // On remet la normale dans les coordonnées de la fenêtre
     n = transformVect(normal,c);
