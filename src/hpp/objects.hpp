@@ -43,6 +43,7 @@ struct scene {
 
 /**********************************  OBJET 1 : SPHERE **************************************/
 
+// Le test d'intersection est simple et mathématique car la sphère est un objet très simple
 bool hitSphere(const ray &r, const object &s, float &t) 
  { 
     
@@ -95,16 +96,8 @@ point transformPoint(const point &p, const object& c){
   
   float angle_x = c.angle_rot_x * M_PI /180;    // Conversion de l'angle en radians
   float angle_y = c.angle_rot_y * M_PI /180;
+  
   point q;
-   if(fabs(angle_x) < 1e-3)
-    angle_x =0;
-  if(fabs(angle_y)< 1e-3)
-    angle_y =0;
-  if(fabs(angle_x-1) < 1e-3)
-    angle_x =1;
-  if(fabs(angle_y-1)< 1e-3)
-    angle_y =1;
-
   // Matrice de rotation en X
   float matrix_x[3][3] = {
     {1, 0, 0},
@@ -148,19 +141,6 @@ vecteur transformVect(const vecteur &p, const object& c){
   float angle_x = c.angle_rot_x *  0.0174533;    // Conversion de l'angle en radians
   float angle_y = c.angle_rot_y *  0.0174533;
   
-  if(fabs(angle_x) < 1e-5)
-    angle_x =0;
-  if(fabs(angle_y)< 1e-5)
-    angle_y =0;
-  if(fabs(angle_x-M_PI) < 1e-5)
-    angle_x =M_PI;
-  if(fabs(angle_y-M_PI)< 1e-5)
-    angle_y =M_PI;
-  if(fabs(angle_x-M_PI/2) < 1e-5)
-    angle_x =M_PI/2;
-  if(fabs(angle_y-M_PI/2)< 1e-5)
-    angle_y =M_PI/2;
-
   //cout << angle_x << endl;
   //cout << angle_y <<endl;
   vecteur q;
@@ -196,13 +176,6 @@ vecteur transformVect(const vecteur &p, const object& c){
     float y2 = matrix_y[1][0] * x1 + matrix_y[1][1] * y1 + matrix_y[1][2] * z1;
     float z2 = matrix_y[2][0] * x1 + matrix_y[2][1] * y1 + matrix_y[2][2] * z1;
 
-    if(fabs(x2) < 1e-3)
-      x2 =0;
-    if(fabs(y2)< 1e-3)
-      y2 =0;
-    if(fabs(z2) < 1e-3)
-      z2 =0;
-
     //cout << x2 << endl << y2 << endl << z2 << endl;
     
     // Ajouter le centre du cube pour recentrer le sommet
@@ -217,10 +190,7 @@ vecteur transformVect(const vecteur &p, const object& c){
 // Fonction pour transformer un rayon dans le repère du cube
 ray transformRay(const ray& r, const object& c) {
     point origin = transformPoint(r.start.pos, c);
-    vecteur direction = transformVect({r.start.pos.x + r.dir.x, r.start.pos.y + r.dir.y, r.start.pos.z + r.dir.z}, c);
-    direction.x -= origin.x;
-    direction.y -= origin.y;
-    direction.z -= origin.z;
+    vecteur direction = transformVect(r.dir, c);
     return {{origin,r.start.red,r.start.green,r.start.blue}, direction};
 }
 
@@ -232,14 +202,6 @@ point transformPointInverse(const point& p, const object& c) {
   float angle_y = c.angle_rot_y *  0.0174533;
   point q;
   
-   if(fabs(angle_x) < 1e-3)
-    angle_x =0;
-  if(fabs(angle_y)< 1e-3)
-    angle_y =0;
-  if(fabs(angle_x-1) < 1e-3)
-    angle_x =1;
-  if(fabs(angle_y-1)< 1e-3)
-    angle_y =1;
   // Matrice de rotation en X INVERSEE
   float matrix_x[3][3] = {
     {1, 0, 0},
@@ -283,14 +245,6 @@ vecteur transformVectInverse(const vecteur &p, const object& c){
   float angle_y = c.angle_rot_y *  0.0174533;
   vecteur q;
 
-   if(fabs(angle_x) < 1e-3)
-    angle_x =0;
-  if(fabs(angle_y)< 1e-3)
-    angle_y =0;
-  if(fabs(angle_x-1) < 1e-3)
-    angle_x =1;
-  if(fabs(angle_y-1)< 1e-3)
-    angle_y =1;
   // Matrice de rotation en X INVERSEE
   float matrix_x[3][3] = {
     {1, 0, 0},
@@ -305,9 +259,9 @@ vecteur transformVectInverse(const vecteur &p, const object& c){
     {sin(angle_y), 0, cos(angle_y)}
   };
   // Soustraire le centre pour la rotation par rapport au centre
-  float x = p.x - c.pos.x;
-  float y = p.y - c.pos.y;
-  float z = p.z - c.pos.z;
+  float x = p.x;
+  float y = p.y;
+  float z = p.z;
 
     // Appliquer la rotation en X
     float x1 = matrix_x[0][0] * x + matrix_x[0][1] * y + matrix_x[0][2] * z;
@@ -320,9 +274,9 @@ vecteur transformVectInverse(const vecteur &p, const object& c){
     float z2 = matrix_y[2][0] * x1 + matrix_y[2][1] * y1 + matrix_y[2][2] * z1;
 
     // Ajouter le centre du cube pour recentrer le sommet
-    q.x = x2 + c.pos.x;
-    q.y = y2 + c.pos.y;
-    q.z = z2 + c.pos.z;
+    q.x = x2;
+    q.y = y2;
+    q.z = z2;
 
     return q;
   }
@@ -330,10 +284,7 @@ vecteur transformVectInverse(const vecteur &p, const object& c){
 ray transformRayInverse(const ray& r, const object& c) {
     
     point origin = transformPointInverse(r.start.pos, c);
-    vecteur direction = transformVectInverse({r.start.pos.x + r.dir.x, r.start.pos.y + r.dir.y, r.start.pos.z + r.dir.z}, c);
-    direction.x -= origin.x;
-    direction.y -= origin.y;
-    direction.z -= origin.z;
+    vecteur direction = transformVectInverse(r.dir, c);
 
     return {{origin,r.start.red,r.start.green,r.start.blue}, direction};
 }
@@ -423,32 +374,34 @@ bool hitCube(const ray &r1, const object &c, float &t, vecteur &n)
     //cout << "intersect pt cube : " << intersectionPoint.x << ", " << intersectionPoint.y << ", " << intersectionPoint.z << endl;
     // Calcul de la normale au point d'intersection
     vecteur normal;
-    if (intersectionPoint.x >= AABB_min.x && fabs(intersectionPoint.x - AABB_min.x) < 0.1) {
+    if (intersectionPoint.x >= AABB_min.x && fabs(intersectionPoint.x - AABB_min.x) < 1.0f) {
         normal = {-1, 0, 0};
     }
-    else if (intersectionPoint.x <= AABB_max.x && std::abs(intersectionPoint.x -AABB_max.x) < 0.1) {
+    else if (intersectionPoint.x <= AABB_max.x && std::abs(intersectionPoint.x -AABB_max.x) < 1.0f) {
         normal = {1, 0, 0};
     }
-    else if (intersectionPoint.y >= AABB_min.y && std::abs(intersectionPoint.y - AABB_min.y) < 0.1) {
+    else if (intersectionPoint.y >= AABB_min.y && std::abs(intersectionPoint.y - AABB_min.y) < 1.0f) {
         normal = {0, -1, 0};
     }
-    else if (intersectionPoint.y <= AABB_max.y && std::abs(intersectionPoint.y - AABB_max.y) < 0.1) {
+    else if (intersectionPoint.y <= AABB_max.y && std::abs(intersectionPoint.y - AABB_max.y) < 1.0f) {
         normal = {0, 1, 0};
     }
-    else if (intersectionPoint.z >= AABB_min.z && std::abs(intersectionPoint.z - AABB_min.z) < 0.1) {
+    else if (intersectionPoint.z >= AABB_min.z && std::abs(intersectionPoint.z - AABB_min.z) < 1.0f) {
         normal = {0, 0, -1};
     }
-    else if (intersectionPoint.z <= AABB_max.z && std::abs(intersectionPoint.z - AABB_max.z) < 0.1) {
+    else if (intersectionPoint.z <= AABB_max.z && std::abs(intersectionPoint.z - AABB_max.z) < 1.0f) {
         normal = {0, 0, 1};
     }
     else{
-      normal = {0,0,0};
+      normal = {0,0,1};
     }
-    //cout << "normal : " << normal.x << ", " << normal.y << ", " << normal.z << endl;
+    cout << "normal : " << normal.x << ", " << normal.y << ", " << normal.z << endl;
     /************PARTIE 3 : ON REMET TOUT DANS LE REPERE LOCAL ***************/
 
     // on remet le point d'intersection dans les coordonées de la fenêtre
     point intersectionPointReel = transformPoint(intersectionPoint,c);
+
+    t = sqrt((intersectionPointReel - r1.start.pos)*(intersectionPointReel - r1.start.pos));
     //cout << "pt d'intersect : " << intersectionPointReel.x << ", " << intersectionPointReel.y << ", " << intersectionPointReel.z << endl;
     // On remet la normale dans les coordonnées de la fenêtre
     n = transformVect(normal,c);

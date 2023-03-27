@@ -31,10 +31,10 @@ using namespace std;
      float coef = 1.0f;
      int level = 0; 
      
-     // lancer de rayon 
+     // Lancer de rayon 
      ray viewRay = { {float(x), float(y), -10000.0f}, { 0.0f, 0.0f, 1.0f}}; // Le 1er rayon est "perprendiculaire" à l'écran et commence a -10 000
-     // ce premier rayon est "virtuel" et sert surtout a quel objet appartient le pixel qu'on parcourt, et la normale de l'objet en ce point
-     int arete = 0; 
+     // Ce premier rayon est "virtuel" et sert surtout a quel objet appartient le pixel qu'on parcourt, et la normale de l'objet en ce point
+     
      // Boucle while qui s'arrête après x itérations ou si on a une reflection négative 
      do 
      { 
@@ -203,15 +203,10 @@ using namespace std;
 
        level++;  // On passe au niveau d'itération suivant
      } 
-     while ((coef > 0.0f) && (level < 50));   
+     while ((coef > 0.0f) && (level < 10));   
 
-     // On met à jour le pixel de l'image
-     // Si le pixel appartient à une arête du cube
-     if (arete == 1){
-      imageFile.put((unsigned char)255).put((unsigned char)255).put((unsigned char)255);}
-     
-     else{
-      imageFile.put((unsigned char)min(blue*255.0f,255.0f)).put((unsigned char)min(green*255.0f, 255.0f)).put((unsigned char)min(red*255.0f, 255.0f));}
+      // On met à jour le pixel de l'image
+      imageFile.put((unsigned char)min(blue*255.0f,255.0f)).put((unsigned char)min(green*255.0f, 255.0f)).put((unsigned char)min(red*255.0f, 255.0f));
    }
    }
    return true;
