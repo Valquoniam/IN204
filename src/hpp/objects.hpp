@@ -590,7 +590,7 @@ bool hitCube(const ray &r1, const object &c, float &t, vecteur &n)
 
     //std::cout << "t =" << t << endl;
     return intersects;
- }
+ }*/
 
 /*
   point minBounds = vertices[0];
