@@ -34,6 +34,7 @@ istream & operator >> ( istream &inputFile, object& obj ) {
 // 	- Objets (sphères, cubes, etc...)
 // 	- Sources lumineuses
 struct scene {
+
 	vector<material> matTab;
 	vector<object>   objTab;
 	vector<light>    lgtTab;
@@ -84,12 +85,7 @@ bool hitSphere(const ray &r, const object &s, float &t)
 
 /***********************************  OBJET 2 : CUBE ***************************************/
 
-//Une face du cube correspond à 4 sommets du cube
-struct face {
-    point p1, p2, p3, p4;
-};
-
-/*************************** ROTATION DANS LE REPERE DU CUBE ***********************************/
+/******* ROTATION DANS LE REPERE DU CUBE *******/
 
 // Fonction pour tourner un point dans le repère du cube
 point transformPoint(const point &p, const object& c){
@@ -187,14 +183,7 @@ vecteur transformVect(const vecteur &p, const object& c){
     return q;
   }
 
-// Fonction pour transformer un rayon dans le repère du cube
-ray transformRay(const ray& r, const object& c) {
-    point origin = transformPoint(r.start.pos, c);
-    vecteur direction = transformVect(r.dir, c);
-    return {{origin,r.start.red,r.start.green,r.start.blue}, direction};
-}
-
-/************ MAINTENANT, LES FONCTIONS POUR L'INVERSION ****************/
+/***** MAINTENANT, LES FONCTIONS POUR LE RETOUR DANS LE REPERE GLOBAL ******/
 
 point transformPointInverse(const point& p, const object& c) {
     
@@ -289,41 +278,36 @@ ray transformRayInverse(const ray& r, const object& c) {
     return {{origin,r.start.red,r.start.green,r.start.blue}, direction};
 }
 
-// Fonction pour la rotation de tous les sommets du cube
-void rotateCube(point vertices[8], const object& c){
-
-  // Appliquer la rotation à chaque sommet du cube
-  for (int i = 0; i < 8; i++) {
-    vertices[i] = transformPoint(vertices[i],c);
-  }
-}
-
-
-// Fonction qui vérifie si le rayon intersecte bien le cube.
-// La fonction actualise aussi t : distance rayon-intersection et n : vecteur normal au point d'intersection
-// Comme le cube est tourné selon les axes x et y, voici la méthode utilisée :
-//  1) Mettre le rayon dans le système de coordonées du cube. Pour cela, on muplitiplie le rayon (origine et direction) par l'inverse de la matrice de rotation du cube
-//  2) Calculer l'intersection et la normale de ce rayon avec le cube non tourné (simple quand c'est non tourné)
-//  3) Remettre ce point d'intersection et cette normale dans le repère global en utilisant la matrice de rotation du cube.
+/*
+Fonction qui vérifie si le rayon intersecte bien le cube.
+La fonction actualise aussi t : distance rayon-intersection 
+                         et n : vecteur normal au point d'intersection.
+Comme le cube est tourné selon les axes x et y, voici la méthode utilisée :
+  1) Mettre le rayon dans le système de coordonées du cube. 
+     Pour cela, on muplitiplie le rayon (origine et direction) par l'inverse de la matrice de rotation du cube.
+  2) Calculer l'intersection et la normale de ce rayon avec le cube non tourné (simple quand c'est non tourné).
+  3) Remettre ce point d'intersection et cette normale dans le repère global en utilisant la matrice de rotation du cube.
+*/
 
 bool hitCube(const ray &r1, const object &c, float &t, vecteur &n) 
  {
-  // Notations utiles
+  // Notation utile
   point center = c.pos;
 
-  /******************* PARTIE 1 ***************************/
+  /******************* PARTIE 1 **************************/
   ray r = transformRayInverse(r1,c);
-  //cout << "r origin : " << r.start.pos.x << ", " << r.start.pos.y << ", " << r.start.pos.z << endl;
-  //cout << "r dir : " << r.dir.x << ", " << r.dir.y << ", " << r.dir.z << endl;
-  /*************** Partie 2 : Algo de type AABB (Bounding Box) **************/
+
+  /*************** Partie 2 : Algo de type AABB (Bounding Box) *************/
 
   // Calcul des 2 points extrémaux qui définissent le cube dans les axes du repère
   point AABB_min = {center.x - c.size / 2, center.y - c.size / 2, center.z - c.size / 2};
   point AABB_max = {center.x + c.size / 2, center.y + c.size / 2, center.z + c.size / 2};
+  
   // Calcul des 2 distances maximales entre l'origine du rayon et les pts du cube
   point tMin = (AABB_min - r.start.pos) / r.dir;
   point tMax= (AABB_max - r.start.pos) / r.dir;
   
+  // Ajouté pour fixer un bug sur les cubes quand on a des angles de rotation nuls
   if(c.angle_rot_x == 0 || c.angle_rot_y == 0)
     if (fabs(r.start.pos.y - AABB_min.y) <0.001 || fabs(r.start.pos.x - AABB_min.x) <0.001 || fabs(r.start.pos.x - AABB_max.x) <0.001 || fabs(r.start.pos.y - AABB_max.y) <0.001 || fabs(r.start.pos.z - AABB_max.z) <0.001 || fabs(r.start.pos.z - AABB_max.z) <0.001)
       return false;
@@ -366,16 +350,11 @@ bool hitCube(const ray &r1, const object &c, float &t, vecteur &n)
     if (tMin.x < 0.1f || tMin.x > t) {
         return false;
     }
-    //cout << "tMin : " << tMin.x << ", " << tMin.y << ", " << tMin.z << endl;
-    //cout << "tMax : " << tMax.x << ", " << tMax.y << ", " << tMax.z << endl;
-    
+ 
     t = tMin.x;
-    //cout << t << endl;
-    r.dir = (1.0f/sqrtf(r.dir*r.dir))*r.dir;
-    // Le point d'intersection dans les coordonées du cube
+
     point intersectionPoint = r.start.pos + t * r.dir;
-    //cout << "intersect pt cube : " << intersectionPoint.x << ", " << intersectionPoint.y << ", " << intersectionPoint.z << endl;
-    // Calcul de la normale au point d'intersection
+
     vecteur normal;
     if ( fabs(intersectionPoint.x - AABB_min.x) < 1.0f) {
         normal = {-1, 0, 0};
@@ -399,21 +378,11 @@ bool hitCube(const ray &r1, const object &c, float &t, vecteur &n)
       return false;
 
     }
-    //cout << "normal : " << normal.x << ", " << normal.y << ", " << normal.z << endl;
-    /************PARTIE 3 : ON REMET TOUT DANS LE REPERE LOCAL ***************/
-
-    // on remet le point d'intersection dans les coordonées de la fenêtre
-    point intersectionPointReel = transformPoint(intersectionPoint,c);
-
-    t = ((intersectionPointReel - r1.start.pos)/ r1.dir).z;
-    //cout << "t = " << t << endl;
-    //cout << "pt d'intersect : " << intersectionPointReel.x << ", " << intersectionPointReel.y << ", " << intersectionPointReel.z << endl;
+    /************PARTIE 3 : ON REMET LA NORMALE DANS LE REPERE GLOBAL **************/
+  
     // On remet la normale dans les coordonnées de la fenêtre
     n = transformVect(normal,c);
-    //cout << "n : " << n.x << ", " << n.y << ", " << n.z << endl;
-    n =  1.0f / sqrtf(n*n) * n;
-    //cout << "n : " << n.x << ", " << n.y << ", " << n.z << endl;
-    //cout << "distance entre le rayon et le pt d'intersection : " << t << endl;
+
     return true;
 
  }
@@ -431,7 +400,42 @@ bool hitCube(const ray &r1, const object &c, float &t, vecteur &n)
 
 
 
-/*bool hitCube(const ray &r1, const object &c, float &t, vecteur &n) 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/************************ RELIQUES DE CODE *****************************/
+
+/*
+bool hitCube(const ray &r1, const object &c, float &t, vecteur &n) 
  {  
     point center = c.pos;           // Le centre du cube
     int size = c.size;              // La taille d'un côté du cube
@@ -587,30 +591,8 @@ bool hitCube(const ray &r1, const object &c, float &t, vecteur &n)
     //std::cout << "t =" << t << endl;
     return intersects;
  }
-*/
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  /*
+/*
   point minBounds = vertices[0];
   point maxBounds = vertices[6];
   point intersectionPoint;
@@ -666,85 +648,6 @@ bool hitCube(const ray &r1, const object &c, float &t, vecteur &n)
 }
 */
   
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  /*
-  
-  
-  */
 /*
   double tMin = -INFINITY;
   double tMax = INFINITY;
@@ -800,151 +703,5 @@ bool hitCube(const ray &r1, const object &c, float &t, vecteur &n)
     cout << "n = " << n.x << ", "<< n.y << ", " << n.z << endl;
     return true;
  
- 
- 
- 
- }
-
- 
-    // Calculer l'intersection d'un rayon avec le cube.
-    // on veut trouver le point d'intersection, et savoir à quelle face il appartient.
-    
-*/
-
-
-
-
-
-/****************************************************************************************************************************************/
-/*
-bool intersectRayCube(const Ray& ray, const Cube& cube, Point& intersection) {
-    
-
-    
-
-    
 }
-
-
-
-
 */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-    
-
-    // A MODIF
-
-    if (r.dir.x != 0.0f) { 
-        //Face gauche
-        k = (min_x - r.start.pos.x) / r.start.pos.x; 
-        intersection.x = min_x;
-        intersection.y = r.start.pos.y + k * r.dir.y;
-        intersection.z = r.start.pos.z + k * r.dir.z;
-        if (intersection.y >= min_y && intersection.y <= max_y &&
-            intersection.z >= min_z && intersection.z <= max_z && k>0.0f) {
-            liste_k[2] = k;
-            intersects = true;
-        }
-        //face droite
-        k = (max_x - r.start.pos.x) / r.start.pos.x;
-        intersection.x = max_x;
-        intersection.y = r.start.pos.y + k * r.dir.y;
-        intersection.z = r.start.pos.z + k * r.dir.z;
-        if (intersection.y >= min_y && intersection.y <= max_y &&
-            intersection.z >= min_z && intersection.z <= max_z && k>0.0f) {
-            liste_k[3] = k;
-            intersects = true;
-        }
-    }
-    
-    if (r.dir.y != 0.0f) {
-        //face bas
-        k = (min_y - r.start.pos.y) / r.dir.y;
-        intersection.x = r.start.pos.x + k * r.dir.x;
-        intersection.y = min_y;
-        intersection.z = r.start.pos.z + k * r.dir.z;
-        if (intersection.x >= min_x && intersection.x <= max_x &&
-            intersection.z >= min_z && intersection.z <= max_z && k>0.0f) {
-            liste_k[4] = k;
-            intersects = true;
-        }
-        //face haut
-        k = (max_y - r.start.pos.y) / r.dir.y;
-        intersection.x = r.start.pos.x + t * r.dir.x;
-        intersection.y = max_y;
-        intersection.z = r.start.pos.z + t * r.dir.z;
-        if (intersection.x >= min_x && intersection.x <= max_x &&
-            intersection.z >= min_z && intersection.z <= max_z && k>0.0f) {
-            liste_k[5] = k;
-            intersects = true;
-        }
-    }
-    if (r.dir.z != 0.0f) {
-        //face avant
-        k = (min_z - r.start.pos.z) / r.dir.z;
-        intersection.x = r.start.pos.x + k * r.dir.x;
-        intersection.y = r.start.pos.y + k * r.dir.y;
-        intersection.z = min_z;
-        if (intersection.x >= min_x && intersection.x <= max_x &&
-           intersection.y >= min_y && intersection.y <= max_y && k > 0.0f) {
-           liste_k[0] = k;
-           intersects = true;
-        }
-        
-        //face arrière
-        k = (max_z - r.start.pos.z) / r.dir.z;
-        intersection.x = r.start.pos.x + k * r.dir.x;
-        intersection.y = r.start.pos.y + k * r.dir.y;
-        intersection.z = max_z;
-        if (intersection.x >= min_x && intersection.x <= max_x &&
-          intersection.y >= min_y && intersection.y <= max_y && k>0.0f) {
-          liste_k[1] = k;
-          intersects = true;
-        }
-     }
-
-    if (intersects){
-      if (min_element(begin(liste_k),end(liste_k))[0] < t)
-        t = min_element(begin(liste_k),end(liste_k))[0];  // Valeur minimale : intersection la plus proche
-      auto itr = find(begin(liste_k), end(liste_k), t);
-      int num_face = distance(begin(liste_k), itr);
-      n = normales[num_face];}
-      //cout << "face de colision " << num_face << endl;}
-
-return intersects;
-
-}*/

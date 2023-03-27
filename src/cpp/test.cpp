@@ -9,6 +9,10 @@
 
 using namespace std;
 
+
+// Fonction utilisée au fur et à mesure du projet pour tester nos features 
+// Notamment pour tester les rotations avec les cubes
+
 int main(){
 vecteur dir = {0.0, 0.0, 1.0};
 point pos = {53,50,-30};

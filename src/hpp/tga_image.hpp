@@ -15,7 +15,8 @@ bool header_tga(char* outputName, scene &myScene, ofstream &imageFile){
    if (!imageFile){
     return false;
    }
-     
+   
+   //Le format TGA est spécial et doit etre initialisé avec des octets précis.
    // Binaire : On ajoute le header spécifique au format TGA
    imageFile.put(0).put(0);  // - 2 premiers octets à 0
    imageFile.put(2);         // - 3ème octet mis à 2 pour dire que l'on est en RGB non compressé

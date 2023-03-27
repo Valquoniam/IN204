@@ -25,6 +25,10 @@ istream & operator >> ( istream &inputFile,  vecteur& v ) {
 	return inputFile >> v.x >> v.y >> v.z ; 
 }
 
+
+
+// Définition des opérations 
+
 // Déplace un point en utilisant un vecteur
 point operator + (const point&p, const vecteur &v){
 	point p2={p.x + v.x, p.y + v.y, p.z + v.z };
@@ -62,10 +66,11 @@ vecteur operator - (const vecteur&v1, const vecteur &v2){
 	return v;
 }
 
-// Division de 2 vects
+// Division point par point de 2 vecteurs : dans nos calculs, cela renverra un point 
 point operator / (const vecteur&v1, const vecteur &v2) {
 	return { (v1.x / v2.x),(v1.y / v2.y), (v1.z / v2.z)};
 }
+
 // Produit scalaire
 float operator * (const vecteur&v1, const vecteur &v2 ) {
 	return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
@@ -75,7 +80,9 @@ float operator * (const vecteur&v1, const vecteur &v2 ) {
 vecteur operator & (const vecteur&v1, const vecteur &v2) {
 	return { (v1.y * v2.z) - (v1.z * v2.y), (v1.z * v2.x) - (v1.x * v2.z), (v1.x * v2.y) - (v1.y * v2.x)};
 }
-// Définition d'un matériau par sa couleur (en pourcentage RGB et son indice de réflection)
+
+
+// Définition d'un matériau par sa couleur (en pourcentage RGB) et son indice de réflection
 struct material {
 	float red, green, blue, reflection;
 };
@@ -97,6 +104,7 @@ istream & operator >> ( istream &inputFile, light& lig ) {
 }
 
 // Un rayon lumineux a une source et va dans une direction
+//Pas réellement besoin d'un opérateur >> dans ce cas.
 struct ray {
 	light start;
 	vecteur dir;

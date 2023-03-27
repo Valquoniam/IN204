@@ -26,7 +26,7 @@ using namespace std;
 
    // Balayage des rayons lumineux
    for (int y = 0; y < myScene.sizey; ++y) { //On parcourt tous les pixels de l'image
-   for (int x = 0; x < myScene.sizex; ++x) {
+    for (int x = 0; x < myScene.sizex; ++x) {
      float red = 0, green = 0, blue = 0;    
      float coef = 1.0f;
      int level = 0; 
@@ -69,87 +69,24 @@ using namespace std;
 
        if (currentObject == -1)
          break;
-      /*************************************************************
-
-       if (currentObjectType == "cube"){
-        point center = myScene.objTab[currentObject].pos;        // Le centre du cube
-        int size = myScene.objTab[currentObject].size;           // La taille d'un côté du cube
-        float angle_y = myScene.objTab[currentObject].angle_rot_y; // L'angle de rotation du cube
-        float angle_x = myScene.objTab[currentObject].angle_rot_x;
-        angle = angle *  0.0174533;
-
-        point vertices[8] = {
-      {center.x - size / 2, center.y - size / 2, center.z - size / 2}, // Sommet en bas à gauche devant
-      {center.x - size / 2, center.y - size / 2, center.z + size / 2}, // Sommet en bas à gauche derriere
-      {center.x - size / 2, center.y + size / 2, center.z - size / 2}, // Sommet en haut à gauche devant
-      {center.x - size / 2, center.y + size / 2, center.z + size / 2}, // Sommet en haut à gauche derrière
-      {center.x + size / 2, center.y - size / 2, center.z - size / 2}, // Sommet en bas à droite devant
-      {center.x + size / 2, center.y - size / 2, center.z + size / 2}, // Sommet en bas à droite derrière
-      {center.x + size / 2, center.y + size / 2, center.z - size / 2}, // Sommet en haut à droite devant
-      {center.x + size / 2, center.y + size / 2, center.z + size / 2}  // Sommet en haut à droite derrière
-            };
-        
-        // effectuer la rotation du cube
-        float si = sin(angle);
-        float co = cos(angle);
-
-        for (int i = 0; i < 8; i++) {
-            float x = vertices[i].x - center.x;
-            float y = vertices[i].y - center.y;
-            float z = vertices[i].z - center.z;
-
-        // rotation 
-        
-        float zrot = y * co + z * si;
-        float yrot = y * co - z * si; 
-
-        //On met à jour les coordonnées après la rotation
-        vertices[i].x = x + center.x;
-        vertices[i].y = yrot + center.y;
-        vertices[i].z = zrot + center.z;
-        }
-
-        // Calculate the minimum and maximum x, y, and z values of the cube
-        float min_x = vertices[0].x, max_x = vertices[0].x;
-        float min_y = vertices[0].y, max_y = vertices[0].y;
-        float min_z = vertices[0].z, max_z = vertices[0].z;
-    
-        for (int i = 1; i < 8; ++i) {
-          min_x = min(min_x, vertices[i].x);
-          max_x = max(max_x, vertices[i].x);
-          min_y = min(min_y, vertices[i].y);
-          max_y = max(max_y, vertices[i].y);
-          min_z = min(min_z, vertices[i].z);
-          max_z = max(max_z, vertices[i].z);
-          }
-        int y_arete;
-        for (int i = 1; i < 8; ++i) {
-          if (vertices[i].z == min_z){
-            y_arete = vertices[i].y;
-          }
-        }
-        point newStart = viewRay.start.pos + t * viewRay.dir;
-        if (fabs(newStart.z -min_z) < 0.08 && y == y_arete && level == 0 ){
-          arete = 1;
-        }
-       }
-        */
+      
        // On calcule le point de rencontre entre le rayon et l'objet
        point newStart = viewRay.start.pos + t * viewRay.dir; 
        
        // cout << "(" << newStart.x << ", " << newStart.y << ", " << newStart.z << " )" << endl;
        // On calcule la normale à ce point par rapport à l'objet actuel
-       if (currentObjectType == "sphere"){                                 // 1er cas, la sphère
-          n = newStart - myScene.objTab[currentObject].pos;}       // Pour cela, on fait juste pt_rencontre - centre de l'objet 
+       if (currentObjectType == "sphere"){                                  // 1er cas, la sphère
+          n = newStart - myScene.objTab[currentObject].pos;}                // Pour cela, on fait juste pt_rencontre - centre de l'objet 
        
-       // On vérifie juste que cette normale est non nulle
+       // Pour le cube, n est calculé directement via la fonction hitCube
+
+       // On vérifie juste que la normale est non nulle
        if ( n * n == 0.0f) 
          break; 
 
        // On normalise la normale (aha)
        n =  1.0f / sqrtf(n*n) * n; 
        
-      vecteur n_temp = n;
        // On va calculer l'éclairement en fonction également du matériau
        material currentMat = myScene.matTab[myScene.objTab[currentObject].material]; 
        
@@ -166,8 +103,12 @@ using namespace std;
          ray lightRay;
          lightRay.start.pos = newStart;
          lightRay.dir = (1/t) * dist;
-         
-         // calcul des objets dans l'ombre de cette reflection 
+
+         //Ce vecteur est crée pour la fonction hitCube, qui modifie n en faisant les tests de collision. 
+         // Evidemment, on veut faire les calculs avec le n initial
+         vecteur n_temp = n;
+
+         // calcul des objets dans l'ombre de cette reflexion 
          bool inShadow = false; 
          for (unsigned int i = 0; i < myScene.objTab.size(); ++i) {   // Pour tous les objets
            
@@ -177,8 +118,7 @@ using namespace std;
            }
            
            if ((myScene.objTab[i].type == "cube") && (hitCube(lightRay, myScene.objTab[i], t, n))) {  //Si un objet est touché par le rayon réflechi
-             inShadow = true; // On note inShadow comme étant True (cf. suite)
-             //cout << "shadow";
+             inShadow = true;
              break;
            }
          }
@@ -203,7 +143,7 @@ using namespace std;
 
        level++;  // On passe au niveau d'itération suivant
      } 
-     while ((coef > 0.0f) && (level < 10));   
+     while ((coef > 0.0f) && (level < 20));   
 
       // On met à jour le pixel de l'image
       imageFile.put((unsigned char)min(blue*255.0f,255.0f)).put((unsigned char)min(green*255.0f, 255.0f)).put((unsigned char)min(red*255.0f, 255.0f));
