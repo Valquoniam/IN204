@@ -1,15 +1,16 @@
-# the compiler: gcc for C program, define as g++ for C++
+# Le compilateur
 CC = g++
  
-# compiler flags:
-#  -g     - this flag adds debugging information to the executable file
-#  -Wall  - this flag is used to turn on most compiler warnings
+# Les flags
 CFLAGS  = -g -Wall
 RM = rm
+MAKEFLAGS = -Wno-file-ignored -s -j
 
-# The build target 
+# La cible du code 
 TARGET = main
 
+.SILENT:
+    
 all: $(TARGET)
 
 # Démarche :
@@ -18,69 +19,63 @@ all: $(TARGET)
 #	- On convertit l'image .tga en .png (Il faut avoir installé la biblio graphicsmagick)
 
 $(TARGET): src/hpp/objects.hpp src/hpp/structs.hpp src/hpp/tga_image.hpp
+	echo "Construction des images..."
+
 	$(CC) $(CFLAGS) -o $(TARGET) src/cpp/$(TARGET).cpp     
 	
-	./$(TARGET) scenes/scene1.txt image1.tga
-	./$(TARGET) scenes/scene2.txt image2.tga
-	./$(TARGET) scenes/scene3.txt image3.tga
-	./$(TARGET) scenes/scene4.txt image4.tga
+	./$(TARGET) scenes/scene1.txt images/image1.tga
+	./$(TARGET) scenes/scene2.txt images/image2.tga
+	./$(TARGET) scenes/scene3.txt images/image3.tga
+	./$(TARGET) scenes/scene4.txt images/image4.tga
 
-	convert image1.tga image1.png
-	convert image2.tga image2.png
-	convert image3.tga image3.png
-	convert image4.tga image4.png
 
-	$(RM) image1.tga
-	$(RM) image2.tga
-	$(RM) image3.tga
-	$(RM) image4.tga
+	echo "Rendu des images..."
+	convert images/image1.tga images/image1.png
+	convert images/image2.tga images/image2.png
+	convert images/image3.tga images/image3.png
+	convert images/image4.tga images/image4.png
 
-	mv image1.png images/image1.png
-	mv image2.png images/image2.png
-	mv image3.png images/image3.png
-	mv image4.png images/image4.png
+	$(RM) images/*.tga
 
-	eog images/image1.png
-	eog images/image2.png
-	eog images/image3.png
-	eog images/image4.png
+	echo "Construction de la mosaïque..."
+	convert images/image1.png -resize 1000x1000^ -gravity center -background black -extent 1000x1000 images/image1_resized.png
+	convert images/image2.png -resize 1000x1000^ -gravity center -background black -extent 1000x1000 images/image2_resized.png
+	convert images/image3.png -resize 1000x1000^ -gravity center -background black -extent 1000x1000 images/image3_resized.png
+	convert images/image4.png -resize 1000x1000^ -gravity center -background black -extent 1000x1000 images/image4_resized.png
+	montage images/image1_resized.png images/image2_resized.png images/image3_resized.png images/image4_resized.png -tile 2x2 -geometry +0+0 images/mosaic.png
+	$(RM) images/*resized.png
 
+	echo "Mosaïque finie!"
+	eog images/mosaic.png
 clean:
-	$(RM) $(TARGET)
-	$(RM) images/*.png
-
-
-
+	$(RM)  $(TARGET) 
+	$(RM)  images/*.png
 
 
 image1:	
 	$(CC) $(CFLAGS) -o $(TARGET) src/cpp/$(TARGET).cpp
-	./$(TARGET) scenes/scene1.txt image1.tga
-	convert image1.tga image1.png
-	$(RM) image1.tga
-	mv image1.png images/image1.png
+	./$(TARGET) scenes/scene1.txt images/image1.tga
+	convert images/image1.tga images/image1.png
+	$(RM) images/image1.tga
 	eog images/image1.png
 
 image2:	
 	$(CC) $(CFLAGS) -o $(TARGET) src/cpp/$(TARGET).cpp
-	./$(TARGET) scenes/scene2.txt image2.tga
-	convert image2.tga image2.png
-	$(RM) image2.tga
-	mv image2.png images/image2.png
+	./$(TARGET) scenes/scene2.txt images/image2.tga
+	convert images/image2.tga images/image2.png
+	$(RM) images/image2.tga
 	eog images/image2.png
 
 image3:	
 	$(CC) $(CFLAGS) -o $(TARGET) src/cpp/$(TARGET).cpp
-	./$(TARGET) scenes/scene3.txt image3.tga
-	convert image3.tga image3.png
-	$(RM) image3.tga
-	mv image3.png images/image3.png
+	./$(TARGET) scenes/scene3.txt images/image3.tga
+	convert images/image3.tga images/image3.png
+	$(RM) images/image3.tga
 	eog images/image3.png
 
 image4:	
 	$(CC) $(CFLAGS) -o $(TARGET) src/cpp/$(TARGET).cpp
-	./$(TARGET) scenes/scene4.txt image4.tga
-	convert image4.tga image4.png
-	$(RM) image4.tga
-	mv image4.png images/image4.png
+	./$(TARGET) scenes/scene4.txt images/image4.tga
+	convert images/image4.tga images/image4.png
+	$(RM) images/image4.tga
 	eog images/image4.png
