@@ -1,5 +1,6 @@
 # IN204 - IT Project w/ Axel Dumont - RayTracer
 
+![image](images/image4.png){width = 20%}
 ## Résumé
 
 Ce projet effectue un RayTracing sur un environnement composé de **sphères** et de **cubes**.
