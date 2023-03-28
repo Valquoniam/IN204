@@ -145,6 +145,18 @@ using namespace std;
      } 
      while ((coef > 0.0f) && (level < 20));   
 
+    
+       float exposure = - 0.66f;
+      blue = 1.0f - expf(blue * exposure);
+      red = 1.0f - expf(red * exposure);
+      green = 1.0f - expf(green * exposure);
+
+      //Transformation gamma pour augmenter la qualité
+      float invgamma = 0.45454545; // invgamma est égale à la valeur retenue par le standard sRGB
+      blue = powf(blue, invgamma );
+      red = powf(red, invgamma );
+      green = powf(green, invgamma );
+
       // On met à jour le pixel de l'image
       imageFile.put((unsigned char)min(blue*255.0f,255.0f)).put((unsigned char)min(green*255.0f, 255.0f)).put((unsigned char)min(red*255.0f, 255.0f));
    }
