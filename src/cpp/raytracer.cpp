@@ -23,10 +23,16 @@ using namespace std;
       std::cout << "Problème d'image" << endl;
       return false;
    }
-
+   
+   // Code pour la barre de chargement
+   cout << "Image n°"<< outputName[12];
+   cout << "              [";
    // Balayage des rayons lumineux
    for (int y = 0; y < myScene.sizey; ++y) { //On parcourt tous les pixels de l'image
-    for (int x = 0; x < myScene.sizex; ++x) {
+      if(y% (myScene.sizey/20) == 0){
+        cout << "#" << flush;
+      }
+      for (int x = 0; x < myScene.sizex; ++x) {
      float red = 0, green = 0, blue = 0;    
      float coef = 1.0f;
      int level = 0; 
@@ -162,6 +168,7 @@ using namespace std;
       imageFile.put((unsigned char)min(blue*255.0f,255.0f)).put((unsigned char)min(green*255.0f, 255.0f)).put((unsigned char)min(red*255.0f, 255.0f));
    }
    }
+   cout << "]\n";
    return true;
  }
 

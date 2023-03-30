@@ -33,13 +33,20 @@
 
 /**************************************** Fonction main ************************************/
  int main(int argc, char* argv[]) {
-   if  (argc < 3)
-     return -1;
+   if  (argc < 3){
+     cout << "Usage : ./main scene.txt output.tga" << endl;
+     return -1;}
+
    scene myScene;
-   if (!init(argv[1], myScene))    // On initialise (indirectement)
-     return -1;
-   if (!draw(argv[2], myScene))    // On dessine (toujours indirectement)
-     return -1;
+   
+   if (!init(argv[1], myScene)){   // On initialise (indirectement)
+     cout << "Echèc de l'ouverture de la scène." << endl;
+     return -1;}
+
+   if (!draw(argv[2], myScene)){    // On dessine (toujours indirectement)
+     cout << "Echèc de la création de l'image." << endl;
+     return -1;}
+
    return 0;
  }
 
