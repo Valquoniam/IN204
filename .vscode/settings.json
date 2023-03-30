@@ -21,7 +21,6 @@
         "initializer_list": "cpp",
         "istream": "cpp",
         "limits": "cpp",
-        "new": "cpp",
         "optional": "cpp",
         "ostream": "cpp",
         "sstream": "cpp",
