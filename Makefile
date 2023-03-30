@@ -10,8 +10,8 @@ MAKEFLAGS = -Wno-file-ignored -s -j
 TARGET = main
 
 # Les scènes et images
-SCENES = scenes/scene1.txt scenes/scene2.txt scenes/scene3.txt scenes/scene4.txt
-IMAGES = images/image1 images/image2 images/image3 images/image4
+SCENES = scenes/scene1.txt scenes/scene2.txt scenes/scene3.txt scenes/scene4.txt scenes/scene5.txt
+IMAGES = images/image1 images/image2 images/image3 images/image4 images/image5
 
 .SILENT:
 
@@ -34,6 +34,7 @@ $(TARGET): src/hpp/objects.hpp src/hpp/structs.hpp src/hpp/tga_image.hpp
 	echo "Rendu des images..."
 	for i in $(IMAGES); do \
 		convert $$i.tga $$i.png; \
+		echo $$i | cut -d'/' -f2 | cut -d'.' -f1 | sed 's/scene/image/'; \
 	done
 
 	$(RM) images/*.tga
