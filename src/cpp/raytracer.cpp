@@ -146,7 +146,8 @@ using namespace std;
      while ((coef > 0.0f) && (level < 20));   
 
     
-       float exposure = - 0.66f;
+    // modification de l'exposition : On définit le terme exposure comme on l'entend entre 0 et -1
+      float exposure =  - 0.5f;
       blue = 1.0f - expf(blue * exposure);
       red = 1.0f - expf(red * exposure);
       green = 1.0f - expf(green * exposure);

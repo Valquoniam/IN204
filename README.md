@@ -60,22 +60,22 @@ Les scènes sont définies en **.txt** selon le format suivant :
 ```txt
 640 480                            
 3 3 2                             
-1.0 1.0 0.0 0.5                    
-0.0 1.0 1.0 0.5                   
-1.0 0.0 1.0 0.5                   
-233.0 290.0 0.0 100 0 sphere 0    
-407.0 290.0 0.0 100 1 sphere 0   
-320.0 140.0 0.0 100 2 sphere 0     
-0.0 240.0 -100.0 1.0 1.0 1.0 
+1.0 1.0 0.0 0.1                    
+0.0 1.0 1.0 0.8                   
+1.0 0.0 1.0 0.7                   
+233.0 290.0 0.0 100 0 sphere 0 0   
+407.0 290.0 0.0 100 1 cube  42 23 
+320.0 140.0 0.0 100 2 sphere 0 0    
+0.0   240.0 -100.0 1.0 1.0 1.0 
 640.0 240.0 -10000.0 0.6 0.7 1.0
 ```
 
 ## Fonctionnement de l'algorithme
 
 1. Nous commencons par lire le fichier texte et placer les informations de la scène dans 3 listes (fonction `init()` de _main.cpp_ ) :
-    - Les informations de chaque matériau sont dans la matrice matTab : **matTab[i]** contient les infos sur le matériau d'indice _i_.
-    - Les informations de chaque objet sont dans la matrice objTab : **objTab[i]** contient les infos sur l'objet d'indice _i_.
-    - Les informations de chaque lumière sont dans la matrice lgtTab : **lgtTab[i]** contient les infos sur la lumière d'indice _i_.
+    - Les informations de chaque matériau sont dans la matrice _matTab_ : **matTab[i]** contient les infos sur le matériau d'indice _i_.
+    - Les informations de chaque objet sont dans la matrice _objTab_ : **objTab[i]** contient les infos sur l'objet d'indice _i_.
+    - Les informations de chaque lumière sont dans la matrice _lgtTab_ : **lgtTab[i]** contient les infos sur la lumière d'indice _i_.
 
 2. On construit une image au format **TGA** (fonction `header_tga()` de _tga_image.hpp_ ) :
     - Les premiers octets de du fichier sont écrits de facon bien spécifique pour que le fichier soit considéré comme un .tga.
@@ -83,11 +83,19 @@ Les scènes sont définies en **.txt** selon le format suivant :
     - Les pixels sont coloriés **ligne par ligne, de gauche à droite, en partant de la ligne du bas**.
     - Dans notre algorithme, on parcourt donc pour chaque y, tous les x, en partant de (x,y) = (0,0) (_lignes 28-29 de raytracer.cpp_)
 
-3. Pour "parcourir" les pixels, on envoie un rayon horizontal d'origine (x,y). 
+3. Pour "parcourir" les pixels, voici comment on procède. Pour chaque pixel de coordonnées (x,y), on envoie un rayon horizontal d'origine (x,y) partant d'un z à l'infini. 
     - Si ce rayon touche un objet, alors on note le pixel (x,y) comme faisant partie de l'objet de plus proche que le rayon a traversé.
-    - Pour tester l'intersection rayon-objet, on utilise les fonctions `hitSphere()` et `hitCube()`.
-    - Selon le type d'objet trouvé, on calcule le vecteur normal à la surface dont le pixel actue fait partie.
-    - On fait alors partir un rayon depuis cette surface jusqu'à chaque source lumineuse une par une.
+    - Pour tester l'intersection rayon-objet, on utilise les fonctions `hitSphere()` et `hitCube()` décrites dans _objects.hpp_.
+    - Selon le type d'objet trouvé, on calcule le vecteur normal à la surface dont le pixel actuel fait partie. On calcule aussi le point d'intersection rayon-objet par la même occasion.
 
-4. Pour "colorier" les pixels, on utilise la technique de ...
-    - A completer mais flemme pour l'instant
+4. Pour "enfin" faire du RayTracing, voici la méthode (_cf. à partir de la ligne 90 de raytracer.cpp_) :
+    - Pour chaque lumière :
+        - Depuis chaque point d'intersection, on crée un rayon allant du point à la lumière.
+        - Si ce rayon touche un objet : Le point est dans l'ombre de la lumière. On ne fait rien et on passe à la lumière suivante
+        - Sinon, on calcule les valeurs RGB du pixel avec la méthode de Lambert.
+        - On met ensuite à jour le rayon en utilisant les principes de la reflection, et on recommence.
+        - On s'arrete quand notre coefficient de reflection devient trop faible, ou quand on a atteint le max d'itérations (noté _level_).
+
+5. On a enfin fait des modifications d'exposition et une tranformation gamma pour augmenter la qualité des images.
+
+Mais on a surtout appliqué de l'**antialiasing** : PARTIE DE AXEL
