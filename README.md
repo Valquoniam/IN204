@@ -24,7 +24,6 @@ Ces 2 packages sont nécessaires à la compilation :
 ```bash
 sudo apt install graphicsmagick-imagemagick-compat
 sudo apt install eog
-sudo apt install libpng-dev
 ```
 Pour ne pas avoir de warning en utilisant le package eog, il faut installer ce package:
 

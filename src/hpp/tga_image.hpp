@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <cstring>
 #include "objects.hpp"
-#include <png.h>
 
 /****************** Fonction d'initialisation du fichier TGA de sortie *********************/
 
