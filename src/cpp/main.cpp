@@ -46,7 +46,7 @@
    if (!draw(argv[2], myScene)){    // On dessine (toujours indirectement)
      cout << "Echèc de la création de l'image." << endl;
      return -1;}
-
+   
    return 0;
  }
 

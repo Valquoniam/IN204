@@ -35,6 +35,15 @@
         "utility": "cpp",
         "algorithm": "cpp",
         "list": "cpp",
-        "new": "cpp"
-    }
+        "new": "cpp",
+        "chrono": "cpp",
+        "ctime": "cpp",
+        "ratio": "cpp",
+        "bit": "cpp",
+        "condition_variable": "cpp",
+        "memory": "cpp",
+        "mutex": "cpp",
+        "thread": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
 }

@@ -156,7 +156,6 @@ vecteur transformVect(const vecteur &p, const object& c){
     {-sin(angle_y), 0, cos(angle_y)}
   };
 
-  // Soustraire le centre pour la rotation par rapport au centre
   float x = p.x;
   float y = p.y;
   float z = p.z;

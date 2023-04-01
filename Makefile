@@ -1,8 +1,8 @@
 # Le compilateur
 CC = g++
-
+PYTHON_SCRIPT = src/py/image_converter.py
 # Les flags
-CFLAGS  = -g -Wall
+CFLAGS  = -g -Wall 
 RM = rm
 MAKEFLAGS = -Wno-file-ignored -s -j
 
@@ -10,8 +10,8 @@ MAKEFLAGS = -Wno-file-ignored -s -j
 TARGET = main
 
 # Les scènes et images
-SCENES = scenes/scene1.txt scenes/scene2.txt scenes/scene3.txt scenes/scene4.txt scenes/scene5.txt
-IMAGES = images/image1 images/image2 images/image3 images/image4 images/image5
+SCENES = scenes/scene1.txt scenes/scene2.txt scenes/scene3.txt scenes/scene4.txt scenes/scene5.txt 
+IMAGES = images/image1 images/image2 images/image3 images/image4 images/image5 
 
 .SILENT:
 
@@ -23,19 +23,18 @@ all: $(TARGET)
 #	- On convertit l'image .tga en .png (Il faut avoir installé la biblio graphicsmagick)
 
 $(TARGET): src/hpp/objects.hpp src/hpp/structs.hpp src/hpp/tga_image.hpp
-
+	echo " "
 	echo "Construction des images..."
-	$(CC) $(CFLAGS) -o $(TARGET) src/cpp/$(TARGET).cpp
+	$(CC) $(CFLAGS) -o $(TARGET) src/cpp/$(TARGET).cpp -lpng
 
 	for i in $(SCENES); do \
+		START=$$(date +%s.%N); \
 		./$(TARGET) $$i images/$$(echo $$i | cut -d'/' -f2 | cut -d'.' -f1 | sed 's/scene/image/').tga; \
+		END=$$(date +%s.%N);\
+		DIFF=$$(echo "$$END - $$START" | bc); \
+		printf "Elapsed time : %.2f s.\n" $$DIFF;\
 	done
-
-	echo "Rendu des images..."
-	for i in $(IMAGES); do \
-		convert $$i.tga $$i.png; \
-		echo $$i | cut -d'/' -f2 | cut -d'.' -f1 | sed 's/scene/image/'; \
-	done
+	echo ""
 
 	$(RM) images/*.tga
 

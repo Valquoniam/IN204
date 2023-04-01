@@ -1,5 +1,13 @@
 // Ceci est le code principale du raytracer.
 // Il contient : la fonction d'itération et de calcul du raytracing "draw"
+
+// Pour la conversion tga->png
+#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "../hpp/conversion_tga_png/stb_image.hpp"
+#include "../hpp/conversion_tga_png/stb_image_write.hpp"
+
+// Librairies essentielles
 #include <chrono>
 #include <iostream>
 #include <fstream>
@@ -9,7 +17,11 @@
 #include <algorithm>
 #include <stdio.h>
 #include "../hpp/tga_image.hpp"
+
+// Pour paralléliser
 #include <omp.h>
+
+// Pour la lisibilité
 using namespace std;
 
 /*************** CALCUL DU RAY TRACING ET CREATION DE L'IMAGE ***************/
@@ -25,7 +37,6 @@ bool draw(char *outputName, scene &myScene)
     std::cout << "Problème d'image" << endl;
     return false;
   }
-  auto start = chrono::steady_clock::now();
   // Code pour la barre de chargement
   cout << "Image n°" << outputName[12];
   cout << "              [";
@@ -39,13 +50,13 @@ bool draw(char *outputName, scene &myScene)
     for (int x = 0; x < myScene.sizex; ++x)
     {
       float red = 0, green = 0, blue = 0;
-      for (float fragx = float(x); fragx < x + 1.0f; fragx += 0.25f)
+      for (float fragx = float(x); fragx < x + 1.0f; fragx += 0.5f)
       {
-        for (float fragy = float(y); fragy < y + 1.0f; fragy += 0.25f)
+        for (float fragy = float(y); fragy < y + 1.0f; fragy += 0.5f)
         {
           float coef = 1.0f;
           int level = 0;
-          float sampleRatio = 0.125f;
+          float sampleRatio = 0.25f; // Antialiasing x5
           // Lancer de rayon
           ray viewRay = {{fragx, fragy, -10000.0f}, {0.0f, 0.0f, 1.0f}}; // Le 1er rayon est "perprendiculaire" à l'écran et commence a -10 000
                                                                                // Ce premier rayon est "virtuel" et sert surtout a quel objet appartient le pixel qu'on parcourt, et la normale de l'objet en ce point
@@ -197,9 +208,26 @@ bool draw(char *outputName, scene &myScene)
     }
   }
   cout << "]\n";
-  auto end = chrono::steady_clock::now();
-  cout << "Elapsed time in milliseconds: "
-        << chrono::duration_cast<chrono::milliseconds>(end - start).count()
-        << " ms" << endl;
+  
+    char outputNamePNG[256];
+    sprintf(outputNamePNG, "%.*s.png", (int)(strlen(outputName)-4), outputName);
+    int width, height, channels;
+    uint8_t* tga_pixels = stbi_load(outputName, &width, &height, &channels, STBI_rgb_alpha);
+    
+    // Vérifier si le chargement a réussi
+    if (!tga_pixels) {
+        std::cout << "Erreur lors du chargement du fichier TGA" << std::endl;
+        return -1;
+    }
+    
+    // Écrire le fichier PNG en utilisant la bibliothèque stb_image_write
+    if (!stbi_write_png(outputNamePNG, width, height, STBI_rgb_alpha, tga_pixels, width * 4)) {
+        std::cout << "Erreur lors de l'écriture du fichier PNG" << std::endl;
+        return -1;
+    }
+    
+    // Libérer la mémoire allouée pour les pixels TGA
+    stbi_image_free(tga_pixels);
+
   return true;
 }

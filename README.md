@@ -24,13 +24,22 @@ Ces 2 packages sont nécessaires à la compilation :
 ```bash
 sudo apt install graphicsmagick-imagemagick-compat
 sudo apt install eog
+sudo apt install libpng-dev
 ```
 Pour ne pas avoir de warning en utilisant le package eog, il faut installer ce package:
 
 ```bash
 sudo apt install adwaita-icon-theme-full
 ```
+Pour synchroniser vos horloges et ne pas avoir de warnings lors de l'éxécuction du Makefile, il faut taper la commande :
 
+```bash
+sudo hwclock -s
+```
+
+Si hwclock n'est pas reconnu, il faut install utils-linux : `sudo apt install util-linux`
+
+Enfin, avant de lancer le programme, n'hésitez pas à faire un petit `sudo apt-get upgrade`.
 ### Ligne de commande
 
 Pour compiler le projet, il faut taper la commande `make all`. 
