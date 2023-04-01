@@ -1,6 +1,6 @@
 // Ceci est le code principale du raytracer.
 // Il contient : la fonction d'itération et de calcul du raytracing "draw"
-
+#include <chrono>
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <stdio.h>
 #include "../hpp/tga_image.hpp"
+#include <omp.h>
 using namespace std;
 
 /*************** CALCUL DU RAY TRACING ET CREATION DE L'IMAGE ***************/
@@ -24,7 +25,7 @@ bool draw(char *outputName, scene &myScene)
     std::cout << "Problème d'image" << endl;
     return false;
   }
-
+  auto start = chrono::steady_clock::now();
   // Code pour la barre de chargement
   cout << "Image n°" << outputName[12];
   cout << "              [";
@@ -37,17 +38,16 @@ bool draw(char *outputName, scene &myScene)
     }
     for (int x = 0; x < myScene.sizex; ++x)
     {
-
       float red = 0, green = 0, blue = 0;
-      for (float fragx = float(x); fragx < x + 1.0f; fragx += 0.5f)
+      for (float fragx = float(x); fragx < x + 1.0f; fragx += 0.25f)
       {
-        for (float fragy = float(y); fragy < y + 1.0f; fragy += 0.5f)
+        for (float fragy = float(y); fragy < y + 1.0f; fragy += 0.25f)
         {
           float coef = 1.0f;
           int level = 0;
-          float sampleRatio = 0.25f;
+          float sampleRatio = 0.125f;
           // Lancer de rayon
-          ray viewRay = {{float(x), float(y), -10000.0f}, {0.0f, 0.0f, 1.0f}}; // Le 1er rayon est "perprendiculaire" à l'écran et commence a -10 000
+          ray viewRay = {{fragx, fragy, -10000.0f}, {0.0f, 0.0f, 1.0f}}; // Le 1er rayon est "perprendiculaire" à l'écran et commence a -10 000
                                                                                // Ce premier rayon est "virtuel" et sert surtout a quel objet appartient le pixel qu'on parcourt, et la normale de l'objet en ce point
 
           // Boucle while qui s'arrête après x itérations ou si on a une reflection négative
@@ -197,5 +197,9 @@ bool draw(char *outputName, scene &myScene)
     }
   }
   cout << "]\n";
+  auto end = chrono::steady_clock::now();
+  cout << "Elapsed time in milliseconds: "
+        << chrono::duration_cast<chrono::milliseconds>(end - start).count()
+        << " ms" << endl;
   return true;
 }
