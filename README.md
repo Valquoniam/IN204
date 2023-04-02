@@ -34,6 +34,7 @@ Pour synchroniser vos horloges et ne pas avoir de warnings lors de l'éxécuctio
 
 ```bash
 sudo hwclock -s
+sudo apt install bc
 ```
 
 Si hwclock n'est pas reconnu, il faut install utils-linux : `sudo apt install util-linux`
