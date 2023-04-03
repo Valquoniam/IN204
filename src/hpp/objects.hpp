@@ -274,7 +274,7 @@ ray transformRayInverse(const ray& r, const object& c) {
     point origin = transformPointInverse(r.start.pos, c);
     vecteur direction = transformVectInverse(r.dir, c);
 
-    return {{origin,r.start.red,r.start.green,r.start.blue}, direction};
+    return {{origin,r.start.couleur}, direction};
 }
 
 /*

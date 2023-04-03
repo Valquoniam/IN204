@@ -49,14 +49,14 @@ bool draw(char *outputName, scene &myScene)
     }
     for (int x = 0; x < myScene.sizex; ++x)
     {
-      float red = 0, green = 0, blue = 0;
+      color output = {0.0f, 0.0f, 0.0f}; 
       for (float fragx = float(x); fragx < x + 1.0f; fragx += 0.5f)
       {
         for (float fragy = float(y); fragy < y + 1.0f; fragy += 0.5f)
         {
           float coef = 1.0f;
           int level = 0;
-          float sampleRatio = 0.25f; // Antialiasing x5
+          float sampleRatio = 0.25f; // Antialiasing x4
           // Lancer de rayon
           ray viewRay = {{fragx, fragy, -10000.0f}, {0.0f, 0.0f, 1.0f}}; // Le 1er rayon est "perprendiculaire" à l'écran et commence a -10 000
                                                                                // Ce premier rayon est "virtuel" et sert surtout a quel objet appartient le pixel qu'on parcourt, et la normale de l'objet en ce point
@@ -142,6 +142,17 @@ bool draw(char *outputName, scene &myScene)
               lightRay.start.pos = newStart;
               lightRay.dir = (1 / t) * dist;
 
+              float fLightProjection = lightRay.dir * n;
+
+              float lightDist = lightRay.dir * lightRay.dir;
+              {
+                float temp = lightDist;
+			          if ( temp == 0.0f )
+				          continue;
+                temp = 1.0 / sqrtf(temp);
+			          lightRay.dir = temp * lightRay.dir;
+                fLightProjection = temp * fLightProjection;
+              }
               // Ce vecteur est crée pour la fonction hitCube, qui modifie n en faisant les tests de collision.
               //  Evidemment, on veut faire les calculs avec le n initial
               vecteur n_temp = n;
@@ -168,66 +179,81 @@ bool draw(char *outputName, scene &myScene)
               // En revanche, si il n'y a aucun objet entre la surface actuelle et la lumière :
               if (!inShadow)
               {
-                // On applique le modèle de Lambert, ou lambert est la "valeur d'éclairement"
-                float lambert = (lightRay.dir * n_temp) * coef; // De base, coef vaut 1
-                red += lambert * current.red * currentMat.red;  // On met à jour les valeurs des pixels
-                green += lambert * current.green * currentMat.green;
-                blue += lambert * current.blue * currentMat.blue;
-              }
+                float lambert = (lightRay.dir * n_temp) * coef;
+                output.red += lambert * current.couleur.red * currentMat.diffuse.red;
+                output.green += lambert * current.couleur.green * currentMat.diffuse.green;
+                output.blue += lambert * current.couleur.blue * currentMat.diffuse.blue;
+
+				        // Blinn 
+                // La direction de Blinn est exactement � mi chemin entre le rayon
+                // lumineux et le rayon de vue. 
+                // On calcule le vecteur de Blinn et on le rend unitaire
+                // puis on calcule le co�fficient de blinn
+                // qui est la contribution sp�culaire de la lumi�re courante.
+
+                float fViewProjection = viewRay.dir * n_temp;
+                vecteur blinnDir = lightRay.dir - viewRay.dir;
+                float temp = blinnDir * blinnDir;
+                if (temp != 0.0f )
+                {
+                  float blinn = (1.0 /sqrtf(temp)) * max(fLightProjection - fViewProjection , 0.0f);
+                  blinn = coef * powf(blinn, currentMat.power);
+                  output += blinn *currentMat.specular  * current.couleur;
+                }
+			        }
             }
-
-            // On met à jour les rayons pour calculer la reflection suivante
-            coef *= currentMat.reflection;           // On met à jour le coefficient de reflection
-            float reflet = 2.0f * (viewRay.dir * n); // reflet vaut 2.cos(viewray,n)
-
-            viewRay.start.pos = newStart;           // On met à jour la 'position de la caméra' pour calculer les reflections suivantes
-            viewRay.dir = viewRay.dir - reflet * n; // On met à jour la direction comme étant l'ancienne direction - reflet*la normale
-
-            level++; // On passe au niveau d'itération suivant
+		        coef *= currentMat.reflection;
+		        float reflet = 2.0f * (viewRay.dir * n);
+            viewRay.start.pos = newStart;
+		        viewRay.dir = viewRay.dir - reflet * n;
+            level++;
           } while ((coef > 0.0f) && (level < 20));
 
           // modification de l'exposition : On définit le terme exposure comme on l'entend entre 0 et -1
           float exposure = -0.5f;
-          blue = 1.0f - expf(blue * exposure);
-          red = 1.0f - expf(red * exposure);
-          green = 1.0f - expf(green * exposure);
+          output.blue = 1.0f - expf(output.blue * exposure);
+          output.red = 1.0f - expf(output.red * exposure);
+          output.green = 1.0f - expf(output.green * exposure);
 
-          blue += sampleRatio * blue;
-          red += sampleRatio * red;
-          green += sampleRatio * green;
-        } 
+          output.blue += sampleRatio * output.blue;
+          output.red += sampleRatio * output.red;
+          output.green += sampleRatio * output.green; 
+        }
       }
+
       // Transformation gamma pour augmenter la qualité
       float invgamma = 0.45454545; // invgamma est égale à la valeur retenue par le standard sRGB
-      blue = powf(blue, invgamma);
-      red = powf(red, invgamma);
-      green = powf(green, invgamma);
+      output.blue = powf(output.blue, invgamma);
+      output.red = powf(output.red, invgamma);
+      output.green = powf(output.green, invgamma);
 
       // On met à jour le pixel de l'image
-      imageFile.put((unsigned char)min(blue * 255.0f, 255.0f)).put((unsigned char)min(green * 255.0f, 255.0f)).put((unsigned char)min(red * 255.0f, 255.0f));
+      imageFile.put((unsigned char)min(output.blue * 255.0f, 255.0f)).put((unsigned char)min(output.green * 255.0f, 255.0f)).put((unsigned char)min(output.red * 255.0f, 255.0f));
     }
   }
   cout << "]\n";
+
+  char outputNamePNG[256];
+  sprintf(outputNamePNG, "%.*s.png", (int)(strlen(outputName)-4), outputName);
+  int width, height, channels;
+  uint8_t* tga_pixels = stbi_load(outputName, &width, &height, &channels, STBI_rgb_alpha);
+
+  // Vérifier si le chargement a réussi
+  if (!tga_pixels) 
+  {
+    std::cout << "Erreur lors du chargement du fichier TGA" << std::endl;
+    return -1;
+  }
+
+  // Écrire le fichier PNG en utilisant la bibliothèque stb_image_write
+  if (!stbi_write_png(outputNamePNG, width, height, STBI_rgb_alpha, tga_pixels, width * 4)) 
+  {
+    std::cout << "Erreur lors de l'écriture du fichier PNG" << std::endl;
+    return -1;
+  }
   
-    char outputNamePNG[256];
-    sprintf(outputNamePNG, "%.*s.png", (int)(strlen(outputName)-4), outputName);
-    int width, height, channels;
-    uint8_t* tga_pixels = stbi_load(outputName, &width, &height, &channels, STBI_rgb_alpha);
-    
-    // Vérifier si le chargement a réussi
-    if (!tga_pixels) {
-        std::cout << "Erreur lors du chargement du fichier TGA" << std::endl;
-        return -1;
-    }
-    
-    // Écrire le fichier PNG en utilisant la bibliothèque stb_image_write
-    if (!stbi_write_png(outputNamePNG, width, height, STBI_rgb_alpha, tga_pixels, width * 4)) {
-        std::cout << "Erreur lors de l'écriture du fichier PNG" << std::endl;
-        return -1;
-    }
-    
-    // Libérer la mémoire allouée pour les pixels TGA
-    stbi_image_free(tga_pixels);
+  // Libérer la mémoire allouée pour les pixels TGA
+  stbi_image_free(tga_pixels);
 
   return true;
 }

@@ -25,9 +25,42 @@ istream & operator >> ( istream &inputFile,  vecteur& v ) {
 	return inputFile >> v.x >> v.y >> v.z ; 
 }
 
+// Une couleur : RGB (on aurait aussi pu la définir par un point)
+struct color {
+	float red, green, blue;
+};
 
-
+// Retourne les valeurs RGB d'une couleur
+istream & operator >> ( istream &inputFile,  color& couleur) {
+	return inputFile >> couleur.red >> couleur.green >> couleur.blue; 
+}
 // Définition des opérations 
+
+// Multiplie 2 couleurs
+inline color operator * (const color&c1, const color &c2 ) {
+	color c = {c1.red * c2.red, c1.green * c2.green, c1.blue * c2.blue};
+	return c;
+}
+
+// Additionne 2 couleurs
+inline color operator + (const color&c1, const color &c2 ) {
+	color c = {c1.red + c2.red, c1.green + c2.green, c1.blue + c2.blue};
+	return c;
+}
+
+// Ajout du += par souci de simplicité
+inline color & operator += (color&c1, const color &c2 ) {
+	c1.red +=  c2.red;
+    c1.green += c2.green;
+    c1.blue += c2.blue;
+	return c1;
+}
+
+// Multiplication par un coefficient
+inline color operator * (float coef, const color &c ) {
+	color c2 = {c.red * coef, c.green * coef, c.blue * coef};
+	return c2;
+}
 
 // Déplace un point en utilisant un vecteur
 point operator + (const point&p, const vecteur &v){
@@ -82,25 +115,33 @@ vecteur operator & (const vecteur&v1, const vecteur &v2) {
 }
 
 
-// Définition d'un matériau par sa couleur (en pourcentage RGB) et son indice de réflection
+// Définition d'un matériau par :
+//	- Sa couleur diffusée
+//	- Son indice de réflection
+//  - Sa couleur de réflection spéculaire
+//  - Sa puissance de réflection spéculaire
+
 struct material {
-	float red, green, blue, reflection;
+	color diffuse;
+    float reflection;
+    color specular;
+    float power;
 };
 
 // Retourne les pourcentages de couleur et l'indice de reflection d'un matériau
 istream & operator >> ( istream &inputFile, material& mat ) {
-	return inputFile >> mat.red >> mat.green >> mat.blue >> mat.reflection; 
+	return inputFile >> mat.diffuse >> mat.reflection >> mat.specular >> mat.power;
 }
 
 // On définit une source lumineuse par sa position et sa couleur
 struct light {
 	point pos;
-	float red, green, blue;
+	color couleur;
 };
 
 // Retourne les valeurs d'une source lumineuse
 istream & operator >> ( istream &inputFile, light& lig ) {
-	return inputFile >> lig.pos >> lig.red >> lig.green >> lig.blue;
+	return inputFile >> lig.pos >> lig.couleur;
 }
 
 // Un rayon lumineux a une source et va dans une direction

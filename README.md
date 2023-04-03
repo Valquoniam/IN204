@@ -19,11 +19,12 @@ Ce projet effectue un RayTracing sur un environnement composé de **sphères** e
 
 ### Packages nécessaires
 
-Ces 2 packages sont nécessaires à la compilation :
+Ces 3 packages sont nécessaires à la compilation :
 ​
 ```bash
 sudo apt install graphicsmagick-imagemagick-compat
 sudo apt install eog
+sudo apt install bc
 ```
 Pour ne pas avoir de warning en utilisant le package eog, il faut installer ce package:
 
@@ -34,7 +35,6 @@ Pour synchroniser vos horloges et ne pas avoir de warnings lors de l'éxécuctio
 
 ```bash
 sudo hwclock -s
-sudo apt install bc
 ```
 
 Si hwclock n'est pas reconnu, il faut install utils-linux : `sudo apt install util-linux`
@@ -54,7 +54,7 @@ Les scènes sont définies en **.txt** selon le format suivant :
 
 *  _taille de l'image : Longeur Hauteur_ 
 * _nombre de matériaux, nombre d'objets, nombre de lumières_
-* _premier matériau: pourcentage rouge vert bleu et coefficient de reflexion_
+* _premier matériau: pourcentage RGB de diffusion- coefficient de reflexion - pourcentage RGB spéculaire - coef spéculaire_
 * _deuxieme materiel s'il existe_
 * _troisieme materiel s'il existe et etc..._ 
 * _objet 1: posx, posy, posz, rayon (ou taille des côtés pour un cube), id du matériel (selon leur ordre dans le .txt), type de l'objet (cube ou sphère) angle_rot_x, angle_rot_y (à mettre en degrés)
@@ -67,15 +67,15 @@ Les scènes sont définies en **.txt** selon le format suivant :
 ​
 **scene1.txt :**
 ```txt
-640 480                            
-3 3 2                             
-1.0 1.0 0.0 0.1                    
-0.0 1.0 1.0 0.8                   
-1.0 0.0 1.0 0.7                   
-233.0 290.0 0.0 100 0 sphere 0 0   
-407.0 290.0 0.0 100 1 cube  42 23 
-320.0 140.0 0.0 100 2 sphere 0 0    
-0.0   240.0 -100.0 1.0 1.0 1.0 
+640 480 
+3 3 2
+1.0 1.0 0.0 0.2 1.0 1.0 1.0 60
+0.0 1.0 1.0 0.3 0.4 0.8 1.0 30
+1.0 0.0 1.0 0.5 0.0 1.0 0.0 100
+233.0 290.0 0.0 70 0 cube 12 50
+407.0 290.0 0.0 90 1 sphere 0 0
+320.0 140.0 0.0 60 2 sphere 0 0
+0.0 240.0 -100.0 1.0 1.0 1.0
 640.0 240.0 -10000.0 0.6 0.7 1.0
 ```
 

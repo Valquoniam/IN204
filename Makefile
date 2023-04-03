@@ -24,6 +24,7 @@ all: $(TARGET)
 
 $(TARGET): src/hpp/objects.hpp src/hpp/structs.hpp src/hpp/tga_image.hpp
 	echo " "
+	
 	echo "Construction des images..."
 	$(CC) $(CFLAGS) -o $(TARGET) src/cpp/$(TARGET).cpp -lpng
 

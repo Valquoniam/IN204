@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        "*.cpp": "cpp",
         "iosfwd": "cpp",
         "iostream": "cpp",
         "array": "cpp",
@@ -43,7 +44,10 @@
         "condition_variable": "cpp",
         "memory": "cpp",
         "mutex": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "cstring": "cpp",
+        "map": "cpp",
+        "set": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }
