@@ -1,6 +1,6 @@
 # Le compilateur
 CC = g++
-PYTHON_SCRIPT = src/py/image_converter.py
+
 # Les flags
 CFLAGS  = -g -Wall 
 RM = rm
@@ -26,7 +26,7 @@ $(TARGET): src/hpp/objects.hpp src/hpp/structs.hpp src/hpp/tga_image.hpp
 	echo " "
 	
 	echo "Construction des images..."
-	$(CC) $(CFLAGS) -o $(TARGET) src/cpp/$(TARGET).cpp -lpng
+	$(CC) $(CFLAGS) -o $(TARGET) src/cpp/$(TARGET).cpp
 
 	for i in $(SCENES); do \
 		START=$$(date +%s.%N); \
