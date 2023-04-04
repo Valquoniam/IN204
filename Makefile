@@ -8,7 +8,7 @@ MAKEFLAGS = -Wno-file-ignored -s -j
 
 # La cible du code 
 TARGET = main
-
+SCENE = scene
 # Les scènes et images
 SCENES = scenes/scene1.txt scenes/scene2.txt scenes/scene3.txt scenes/scene4.txt scenes/scene5.txt 
 IMAGES = images/image1 images/image2 images/image3 images/image4 images/image5 
@@ -22,7 +22,7 @@ all: $(TARGET)
 #	- On éxécute raytrace.exe avec comme arguments la scène (en 1ère) et l'image output (en 2ème)
 #	- On convertit l'image .tga en .png (Il faut avoir installé la biblio graphicsmagick)
 
-$(TARGET): src/hpp/objects.hpp src/hpp/structs.hpp src/hpp/tga_image.hpp
+$(TARGET): src/hpp/objects.hpp src/hpp/structs.hpp src/hpp/tga_image.hpp 
 	echo " "
 	
 	echo "Construction des images..."
@@ -57,27 +57,35 @@ clean:
 image1:	
 	$(CC) $(CFLAGS) -o $(TARGET) src/cpp/$(TARGET).cpp
 	./$(TARGET) scenes/scene1.txt images/image1.tga
-	convert images/image1.tga images/image1.png
 	$(RM) images/image1.tga
 	eog images/image1.png
 
 image2:	
 	$(CC) $(CFLAGS) -o $(TARGET) src/cpp/$(TARGET).cpp
 	./$(TARGET) scenes/scene2.txt images/image2.tga
-	convert images/image2.tga images/image2.png
 	$(RM) images/image2.tga
 	eog images/image2.png
 
 image3:	
 	$(CC) $(CFLAGS) -o $(TARGET) src/cpp/$(TARGET).cpp
 	./$(TARGET) scenes/scene3.txt images/image3.tga
-	convert images/image3.tga images/image3.png
 	$(RM) images/image3.tga
 	eog images/image3.png
 
 image4:	
 	$(CC) $(CFLAGS) -o $(TARGET) src/cpp/$(TARGET).cpp
 	./$(TARGET) scenes/scene4.txt images/image4.tga
-	convert images/image4.tga images/image4.png
 	$(RM) images/image4.tga
 	eog images/image4.png
+
+image5:	
+	$(CC) $(CFLAGS) -o $(TARGET) src/cpp/$(TARGET).cpp
+	./$(TARGET) scenes/scene5.txt images/image5.tga
+	$(RM) images/image5.tga
+	eog images/image5.png
+
+scene:
+	$(CC) $(CFLAGS) -o $(TARGET) src/cpp/$(TARGET).cpp
+	./$(TARGET) scenes/scene6.txt images/image6.tga
+	$(RM) images/image6.tga;
+	eog images/image6.png

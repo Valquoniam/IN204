@@ -74,6 +74,12 @@ point operator - (const point&p, const vecteur &v){
 	return p2;
 }
 
+// Addition d'un float à tous les composants d'un vecteur
+point operator + (const point&p, const float &f){
+	point p2={p.x +f, p.y +f, p.z +f};
+	return p2;
+}
+
 // Définition d'un vecteur comme différence de 2 points
 vecteur operator - (const point&p1, const point &p2){
 	vecteur v={p1.x - p2.x, p1.y - p2.y, p1.z - p2.z };

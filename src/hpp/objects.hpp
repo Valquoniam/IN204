@@ -9,7 +9,7 @@
 #include <list>
 
 using namespace std;
-
+float eps = 1e-3;
 /********************************* STRUCTURE GLOBALE D'OBJET *********************************/
 // La structure des objets : 
 //	- Un centre de gravité pos
@@ -23,10 +23,11 @@ struct object {
 	string type;
 	float angle_rot_x;
   float angle_rot_y;
+  float angle_rot_z;
 };
 
 istream & operator >> ( istream &inputFile, object& obj ) {
-	return inputFile >> obj.pos >> obj.size >> obj.material >> obj.type >> obj.angle_rot_x >> obj.angle_rot_y;
+	return inputFile >> obj.pos >> obj.size >> obj.material >> obj.type >> obj.angle_rot_x >> obj.angle_rot_y >> obj.angle_rot_z;
 }
 
 // Notre scène est constitué d'un certain nombre de :
@@ -54,7 +55,7 @@ bool hitSphere(const ray &r, const object &s, float &t)
    float D = B*B - dist * dist + s.size * s.size;    // Discriminant de l'équation polynomiale
    
    // On test si il y a intersection 
-   if (D < 0.0f) 
+   if (D < 0) 
      return false; 
    
    // Si il y a bien intersection, on calcule les 2 racines
@@ -92,7 +93,8 @@ point transformPoint(const point &p, const object& c){
   
   float angle_x = c.angle_rot_x * M_PI /180;    // Conversion de l'angle en radians
   float angle_y = c.angle_rot_y * M_PI /180;
-  
+  float angle_z = c.angle_rot_z * M_PI /180;
+
   point q;
   // Matrice de rotation en X
   float matrix_x[3][3] = {
@@ -106,6 +108,13 @@ point transformPoint(const point &p, const object& c){
     {cos(angle_y), 0, sin(angle_y)},
     {0, 1, 0},
     {-sin(angle_y), 0, cos(angle_y)}
+  };
+
+  // Matrice de rotation en Z 
+  float matrix_z[3][3] = {
+    {cos(angle_z), -sin(angle_z), 0},
+    {sin(angle_z), cos(angle_z), 0},
+    {0, 0, 1 }
   };
 
   // Soustraire le centre pour la rotation par rapport au centre
@@ -123,10 +132,15 @@ point transformPoint(const point &p, const object& c){
     float y2 = matrix_y[1][0] * x1 + matrix_y[1][1] * y1 + matrix_y[1][2] * z1;
     float z2 = matrix_y[2][0] * x1 + matrix_y[2][1] * y1 + matrix_y[2][2] * z1;
 
+    // Appliquer la rotation en Z
+    float x3 = matrix_z[0][0] * x2 + matrix_z[0][1] * y2 + matrix_z[0][2] * z2;
+    float y3 = matrix_z[1][0] * x2 + matrix_z[1][1] * y2 + matrix_z[1][2] * z2;
+    float z3 = matrix_z[2][0] * x2 + matrix_z[2][1] * y2 + matrix_z[2][2] * z2;
+
     // Ajouter le centre du cube pour recentrer le sommet
-    q.x = x2 + c.pos.x;
-    q.y = y2 + c.pos.y;
-    q.z = z2 + c.pos.z;
+    q.x = x3 + c.pos.x;
+    q.y = y3 + c.pos.y;
+    q.z = z3 + c.pos.z;
 
     return q;
   }
@@ -136,6 +150,7 @@ vecteur transformVect(const vecteur &p, const object& c){
   
   float angle_x = c.angle_rot_x *  0.0174533;    // Conversion de l'angle en radians
   float angle_y = c.angle_rot_y *  0.0174533;
+  float angle_z = c.angle_rot_z * M_PI /180;
   
   //cout << angle_x << endl;
   //cout << angle_y <<endl;
@@ -147,13 +162,19 @@ vecteur transformVect(const vecteur &p, const object& c){
     {0, cos(angle_x), -sin(angle_x)},
     {0, sin(angle_x), cos(angle_x)}
   };
-  //cout << "cos: "<< cos(angle_x)<<endl;
-  //cout << "sin : "<< sin(angle_x)<<endl;
+
   // Matrice de rotation en Y
   float matrix_y[3][3] = {
     {cos(angle_y), 0, sin(angle_y)},
     {0, 1, 0},
     {-sin(angle_y), 0, cos(angle_y)}
+  };
+
+  // Matrice de rotation en Z 
+  float matrix_z[3][3] = {
+    {cos(angle_z), -sin(angle_z), 0},
+    {sin(angle_z), cos(angle_z), 0},
+    {0, 0, 1 }
   };
 
   float x = p.x;
@@ -165,20 +186,20 @@ vecteur transformVect(const vecteur &p, const object& c){
     float y1 = matrix_x[1][0] * x + matrix_x[1][1] * y + matrix_x[1][2] * z;
     float z1 = matrix_x[2][0] * x + matrix_x[2][1] * y + matrix_x[2][2] * z;
 
-    //cout << x1 << endl << y1 << endl << z1 << endl;
     // Appliquer la rotation en Y
     float x2 = matrix_y[0][0] * x1 + matrix_y[0][1] * y1 + matrix_y[0][2] * z1;
     float y2 = matrix_y[1][0] * x1 + matrix_y[1][1] * y1 + matrix_y[1][2] * z1;
     float z2 = matrix_y[2][0] * x1 + matrix_y[2][1] * y1 + matrix_y[2][2] * z1;
 
-    //cout << x2 << endl << y2 << endl << z2 << endl;
+    // Appliquer la rotation en Z
+    float x3 = matrix_z[0][0] * x2 + matrix_z[0][1] * y2 + matrix_z[0][2] * z2;
+    float y3 = matrix_z[1][0] * x2 + matrix_z[1][1] * y2 + matrix_z[1][2] * z2;
+    float z3 = matrix_z[2][0] * x2 + matrix_z[2][1] * y2 + matrix_z[2][2] * z2;
     
-    // Ajouter le centre du cube pour recentrer le sommet
-    q.x = x2;
-    q.y = y2;
-    q.z = z2;
+    q.x = x3;
+    q.y = y3;
+    q.z = z3;
 
-    //cout << q.x << endl << q.y << endl << q.z << endl;
     return q;
   }
 
@@ -188,6 +209,8 @@ point transformPointInverse(const point& p, const object& c) {
     
   float angle_x = c.angle_rot_x *  0.0174533;    // Conversion de l'angle en radians
   float angle_y = c.angle_rot_y *  0.0174533;
+  float angle_z = c.angle_rot_z * M_PI /180;
+
   point q;
   
   // Matrice de rotation en X INVERSEE
@@ -202,6 +225,13 @@ point transformPointInverse(const point& p, const object& c) {
     {cos(angle_y), 0, -sin(angle_y)},
     {0, 1, 0},
     {sin(angle_y), 0, cos(angle_y)}
+  };
+
+  // Matrice de rotation en Z INVERSEE
+  float matrix_z[3][3] = {
+    {cos(angle_z), sin(angle_z), 0},
+    {-sin(angle_z), cos(angle_z), 0},
+    {0, 0, 1 }
   };
 
   // Soustraire le centre pour la rotation par rapport au centre
@@ -219,10 +249,15 @@ point transformPointInverse(const point& p, const object& c) {
     float y2 = matrix_y[1][0] * x1 + matrix_y[1][1] * y1 + matrix_y[1][2] * z1;
     float z2 = matrix_y[2][0] * x1 + matrix_y[2][1] * y1 + matrix_y[2][2] * z1;
 
+    // Appliquer la rotation en Z
+    float x3 = matrix_z[0][0] * x2 + matrix_z[0][1] * y2 + matrix_z[0][2] * z2;
+    float y3 = matrix_z[1][0] * x2 + matrix_z[1][1] * y2 + matrix_z[1][2] * z2;
+    float z3 = matrix_z[2][0] * x2 + matrix_z[2][1] * y2 + matrix_z[2][2] * z2;
+
     // Ajouter le centre du cube pour recentrer le sommet
-    q.x = x2 + c.pos.x;
-    q.y = y2 + c.pos.y;
-    q.z = z2 + c.pos.z;
+    q.x = x3 + c.pos.x;
+    q.y = y3 + c.pos.y;
+    q.z = z3 + c.pos.z;
 
     return q;
   }
@@ -231,6 +266,8 @@ vecteur transformVectInverse(const vecteur &p, const object& c){
   
   float angle_x = c.angle_rot_x *  0.0174533;    // Conversion de l'angle en radians
   float angle_y = c.angle_rot_y *  0.0174533;
+  float angle_z = c.angle_rot_z * M_PI /180;
+
   vecteur q;
 
   // Matrice de rotation en X INVERSEE
@@ -246,7 +283,14 @@ vecteur transformVectInverse(const vecteur &p, const object& c){
     {0, 1, 0},
     {sin(angle_y), 0, cos(angle_y)}
   };
-  // Soustraire le centre pour la rotation par rapport au centre
+
+  // Matrice de rotation en Z INVERSEE
+  float matrix_z[3][3] = {
+    {cos(angle_z), sin(angle_z), 0},
+    {-sin(angle_z), cos(angle_z), 0},
+    {0, 0, 1 }
+  };
+
   float x = p.x;
   float y = p.y;
   float z = p.z;
@@ -261,10 +305,14 @@ vecteur transformVectInverse(const vecteur &p, const object& c){
     float y2 = matrix_y[1][0] * x1 + matrix_y[1][1] * y1 + matrix_y[1][2] * z1;
     float z2 = matrix_y[2][0] * x1 + matrix_y[2][1] * y1 + matrix_y[2][2] * z1;
 
-    // Ajouter le centre du cube pour recentrer le sommet
-    q.x = x2;
-    q.y = y2;
-    q.z = z2;
+    // Appliquer la rotation en Z
+    float x3 = matrix_z[0][0] * x2 + matrix_z[0][1] * y2 + matrix_z[0][2] * z2;
+    float y3 = matrix_z[1][0] * x2 + matrix_z[1][1] * y2 + matrix_z[1][2] * z2;
+    float z3 = matrix_z[2][0] * x2 + matrix_z[2][1] * y2 + matrix_z[2][2] * z2;
+
+    q.x = x3;
+    q.y = y3;
+    q.z = z3;
 
     return q;
   }
@@ -373,10 +421,7 @@ bool hitCube(const ray &r1, const object &c, float &t, vecteur &n)
     else if ( fabs(intersectionPoint.z - AABB_max.z) < 1.0f) {
         normal = {0, 0, 1};
     }
-    else{
-      return false;
 
-    }
     /************PARTIE 3 : ON REMET LA NORMALE DANS LE REPERE GLOBAL **************/
   
     // On remet la normale dans les coordonnées de la fenêtre
@@ -386,9 +431,77 @@ bool hitCube(const ray &r1, const object &c, float &t, vecteur &n)
 
  }
 
+/*******************************************************************************************/
+
+/***********************************  OBJET 3 : Le triangle ********************************/
+
+// Element principal de rendu dans les jeux, etc...
+// On utilise l'algo de Möller-Trumbore remanié à notre sauce
+// On va faire comme pour le cube : changement de repère, etc...
+// De base, on a un triangle équilatéral "droit" avec un sommet en haut du milieu de la base
+// Ici, c.size sera la distance centre-sommet
+
+bool hitTriangle(const ray &r1, const object &c, float &t, vecteur &n) 
+{
+// Notation utile
+point center = c.pos;
+/******************* PARTIE 1 **************************/
+ray r = transformRayInverse(r1,c);
+
+/*************** Partie 2 : Algo de Möller-Trumbore *************/
+  
+// Calcul des 3 sommets ds le repère du triangle
+point s1 = {center.x, center.y + 2*c.size, center.z};
+point s2 = {center.x + c.size * sinf(2 * M_PI / 3), center.y + c.size * cosf(2 * M_PI / 3), center.z};
+point s3 = {center.x + c.size * sinf(4 * M_PI / 3), center.y + c.size * cosf(4 * M_PI / 3), center.z};
+
+// Vecteurs des arêtes
+vecteur v1 = s2-s1;
+vecteur v2 = s3-s1;
+
+//Calcul du produit vectoriel rayon - coté du triangle
+vecteur pvec = r.dir & v2;
+float det =  v1 * pvec;
+
+// Cas où le rayon est parallèle au triangle
+  if (fabs(det) ==0)
+    return false;
+
+// Sinon, on poursuit les calculs
+float inv_det = 1.0f / det;
+vecteur tvec = r.start.pos - s1;
+
+//u et v seront les coordonées barycentriques du point d'intersection
+float u = (tvec * pvec) * inv_det;
+
+// Le point d'intersection est en dehors du triangle
+if (u < eps || u > 1.0f +eps)
+    return false;
+
+vecteur qvec = tvec & v1;
+float v = (r.dir *qvec) * inv_det;
+
+// Le point d'intersection est en dehors du triangle
+if (v < -eps || u + v > 1.0f +eps)
+    return false;
+
+float temp = (v2 * qvec)* inv_det;
+if (temp >t  || temp < 0.5)
+  return false;
+
+t = temp;
+//Calcul de la normale
+vecteur normal = v1 & v2;
+
+if (c.angle_rot_x >90)
+ normal = v2 & v1;
+
+// On remet la normale dans les coordonnées de la fenêtre
+n = transformVect(normal,c);
 
 
-
+return true;
+}
 
 
 

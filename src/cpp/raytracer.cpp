@@ -50,13 +50,13 @@ bool draw(char *outputName, scene &myScene)
     for (int x = 0; x < myScene.sizex; ++x)
     {
       color output = {0.0f, 0.0f, 0.0f}; 
-      for (float fragx = float(x); fragx < x + 1.0f; fragx += 0.25f)
+      for (float fragx = float(x); fragx < x + 1.0f; fragx += 0.5f)
       {
-        for (float fragy = float(y); fragy < y + 1.0f; fragy += 0.25f)
+        for (float fragy = float(y); fragy < y + 1.0f; fragy += 0.5f)
         {
           float coef = 1.0f;
           int level = 0;
-          float sampleRatio = 0.125f; // Antialiasing x4
+          float sampleRatio = 0.25f; // Antialiasing x4
           // Lancer de rayon
           ray viewRay = {{fragx, fragy, -10000.0f}, {0.0f, 0.0f, 1.0f}}; // Le 1er rayon est "perprendiculaire" à l'écran et commence a -10 000
                                                                                // Ce premier rayon est "virtuel" et sert surtout a quel objet appartient le pixel qu'on parcourt, et la normale de l'objet en ce point
@@ -69,12 +69,11 @@ bool draw(char *outputName, scene &myScene)
             int currentObject = -1;
             string currentObjectType = "None";
             vecteur n;
-            float tsphere = t;
             for (unsigned int i = 0; i < myScene.objTab.size(); ++i) // Pour chacun des objets
             {
               if (myScene.objTab[i].type == "sphere")
               {
-                if (hitSphere(viewRay, myScene.objTab[i], tsphere))
+                if (hitSphere(viewRay, myScene.objTab[i], t))
                 { // Si l'objet intersecte le rayon
                   currentObject = i;
                   currentObjectType = "sphere"; // On le prend comme l'objet 'actuel'
@@ -88,18 +87,16 @@ bool draw(char *outputName, scene &myScene)
                   currentObjectType = "cube"; // On le prend comme l'objet 'actuel'
                 }
               }
-            }
 
-            if (tsphere <= t)
-            {
-              currentObjectType = "sphere";
-              t = tsphere;
+              if (myScene.objTab[i].type == "triangle")
+              {
+                if (hitTriangle(viewRay, myScene.objTab[i], t, n))
+                { // Si l'objet intersecte le rayon
+                  currentObject = i;
+                  currentObjectType = "triangle"; // On le prend comme l'objet 'actuel'
+                }
+              }
             }
-            else
-            {
-              currentObjectType = "cube";
-            }
-
             if (currentObject == -1)
               break;
 
@@ -173,6 +170,12 @@ bool draw(char *outputName, scene &myScene)
                   inShadow = true;
                   break;
                 }
+                
+                if ((myScene.objTab[i].type == "triangle") && (hitTriangle(lightRay, myScene.objTab[i], t, n)))
+                { // Si un objet est touché par le rayon réflechi
+                  inShadow = true;
+                  break;
+                }
               }
 
               // Si un objet est touché par le rayon réflechi, ca veut dire que la surface actuelle est dans l'ombre ! Donc rien à faire
@@ -210,7 +213,7 @@ bool draw(char *outputName, scene &myScene)
           } while ((coef > 0.0f) && (level < 10));
 
           // modification de l'exposition : On définit le terme exposure comme on l'entend entre 0 et -1
-          float exposure = -0.2f;
+          float exposure = -0.3f;
           output.blue = 1.0f - expf(output.blue * exposure);
           output.red = 1.0f - expf(output.red * exposure);
           output.green = 1.0f - expf(output.green * exposure);

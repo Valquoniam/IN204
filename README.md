@@ -48,6 +48,8 @@ Pour nettoyer les fichiers images et l'éxécutable, il faut utiliser `make clea
 
 Il est également possible de générer seulement une certaine image. Pour l'image 1 par exemple, il y a la commande `make image1`.
 
+Pour générer l'image "scénique" de couverture, il faut utiliser la commande `make scene`.
+
 ## Description du système de scène 
 ​ 
 Les scènes sont définies en **.txt** selon le format suivant :
