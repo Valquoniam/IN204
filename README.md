@@ -110,4 +110,5 @@ Les scènes sont définies en **.txt** selon le format suivant :
 5. On a enfin fait des modifications d'exposition et une tranformation gamma pour augmenter la qualité des images.
 
 Mais on a surtout appliqué de l'**antialiasing** : 
+
 L'antialiasing est un méthode pour atténuer les transitions entre les formes et la scène derriere. Pour effectuer cela, dans le code ```raytrace.cpp```, on forme finalement une image de taille ```2x*2y``` (par exemple pour du 4x-antialiasing). Par la suite la couleur du pixel de sortie dans l'imatge finale est une moyenne des quatres pixels formés dans l'image agrandie.
