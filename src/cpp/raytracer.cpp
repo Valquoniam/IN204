@@ -188,11 +188,11 @@ bool draw(char *outputName, scene &myScene)
                 output.blue += lambert * current.couleur.blue * currentMat.diffuse.blue;
 
 				        // Blinn 
-                // La direction de Blinn est exactement � mi chemin entre le rayon
+                // La direction de Blinn est exactement à mi chemin entre le rayon
                 // lumineux et le rayon de vue. 
                 // On calcule le vecteur de Blinn et on le rend unitaire
-                // puis on calcule le co�fficient de blinn
-                // qui est la contribution sp�culaire de la lumi�re courante.
+                // puis on calcule le coefficient de blinn
+                // qui est la contribution spéculaire de la lumière courante.
 
                 float fViewProjection = viewRay.dir * n_temp;
                 vecteur blinnDir = lightRay.dir - viewRay.dir;
