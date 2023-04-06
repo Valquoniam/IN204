@@ -1,7 +1,8 @@
 # IN204 - IT Project w/ Axel Dumont - RayTracer
 
 <div style="text-align: center;">
-  <img src="images/mosaic.png" alt="texte alternatif de l'image" width="40%" height="40%">
+  <img src="images/mosaic.png" alt="Mosaïque" width="40%" height="40%">
+  <img src="images/image6.png" alt="Scène" width="40%" height="40%">
 </div>
 
 ## Résumé
