@@ -103,12 +103,12 @@ Les scènes sont définies en **.txt** selon le format suivant :
     - Pour chaque lumière :
         - Depuis chaque point d'intersection, on crée un rayon allant du point à la lumière.
         - Si ce rayon touche un objet : Le point est dans l'ombre de la lumière. On ne fait rien et on passe à la lumière suivante
-        - Sinon, on calcule les valeurs RGB du pixel avec la méthode de Lambert.
+        - Sinon, on calcule les valeurs RGB du pixel avec la méthode de Lambert / Phong.
         - On met ensuite à jour le rayon en utilisant les principes de la reflection, et on recommence.
-        - On s'arrete quand notre coefficient de reflection devient trop faible, ou quand on a atteint le max d'itérations (noté _level_).
+        - On s'arrète quand notre coefficient de reflection devient trop faible, ou quand on a atteint le max d'itérations (noté _level_).
 
 5. On a enfin fait des modifications d'exposition et une tranformation gamma pour augmenter la qualité des images.
 
-Mais on a surtout appliqué de l'**antialiasing** : 
+Nous avons aussi appliqué de l'**antialiasing** : 
 
 L'antialiasing est un méthode pour atténuer les transitions entre les formes et la scène derriere. Pour effectuer cela, dans le code ```raytracer.cpp```, on forme finalement une image de taille ```2x*2y``` (par exemple pour du 4x-antialiasing). Par la suite la couleur du pixel de sortie dans l'imatge finale est une moyenne des quatres pixels formés dans l'image agrandie.
