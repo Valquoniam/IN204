@@ -181,19 +181,14 @@ bool draw(char *outputName, scene &myScene)
               // Si un objet est touché par le rayon réflechi, ca veut dire que la surface actuelle est dans l'ombre ! Donc rien à faire
               // En revanche, si il n'y a aucun objet entre la surface actuelle et la lumière :
               if (!inShadow)
-              {
+              { 
+                // Lambert
                 float lambert = (lightRay.dir * n_temp) * coef;
                 output.red += lambert * current.couleur.red * currentMat.diffuse.red;
                 output.green += lambert * current.couleur.green * currentMat.diffuse.green;
                 output.blue += lambert * current.couleur.blue * currentMat.diffuse.blue;
 
 				        // Blinn 
-                // La direction de Blinn est exactement � mi chemin entre le rayon
-                // lumineux et le rayon de vue. 
-                // On calcule le vecteur de Blinn et on le rend unitaire
-                // puis on calcule le co�fficient de blinn
-                // qui est la contribution sp�culaire de la lumi�re courante.
-
                 float fViewProjection = viewRay.dir * n_temp;
                 vecteur blinnDir = lightRay.dir - viewRay.dir;
                 float temp = blinnDir * blinnDir;
@@ -210,7 +205,7 @@ bool draw(char *outputName, scene &myScene)
             viewRay.start.pos = newStart;
 		        viewRay.dir = viewRay.dir - reflet * n;
             level++;
-          } while ((coef > 0.0f) && (level < 10));
+          } while ((coef > 0.0f) && (level < 50));
 
           // modification de l'exposition : On définit le terme exposure comme on l'entend entre 0 et -1
           float exposure = -0.3f;

@@ -10,8 +10,8 @@ MAKEFLAGS = -Wno-file-ignored -s -j
 TARGET = main
 SCENE = scene
 # Les scènes et images
-SCENES = scenes/scene1.txt scenes/scene2.txt scenes/scene3.txt scenes/scene4.txt scenes/scene5.txt 
-IMAGES = images/image1 images/image2 images/image3 images/image4 images/image5 
+SCENES = scenes/scene1.txt scenes/scene2.txt scenes/scene3.txt scenes/scene4.txt scenes/scene5.txt scenes/scene6.txt 
+IMAGES = images/image1 images/image2 images/image3 images/image4 images/image5 images/image6
 
 .SILENT:
 
